@@ -29,130 +29,25 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
         this._notifyOutputChanged = notifyOutputChanged;
         this._container = container;
 
-        // Get current entity context - try multiple methods
+        // Get current entity context - use simple, direct approach
         console.log("=== DETECTING ENTITY CONTEXT ===");
-        
-        // Method 1: Try page context
-        const pageContext = ((context as unknown) as { page?: { entityReference?: { id: string; logicalName: string }; getClientUrl?: () => string } });
-        if (pageContext?.page?.entityReference) {
-            this._relatedEntityId = pageContext.page.entityReference.id.replace(/{|}/g, "");
-            this._relatedEntityName = pageContext.page.entityReference.logicalName;
-            console.log("Method 1 - Page context SUCCESS:", this._relatedEntityName, this._relatedEntityId);
+        const entityRef = ((context as unknown) as { page?: { entityReference?: { id: string; logicalName: string }; getClientUrl?: () => string } }).page?.entityReference;
+        if (entityRef) {
+            this._relatedEntityId = entityRef.id.replace(/{|}/g, "");
+            this._relatedEntityName = entityRef.logicalName;
+            console.log("Entity context SUCCESS:", this._relatedEntityName, this._relatedEntityId);
         } else {
-            console.log("Method 1 - Page context FAILED, trying context data...");
+            console.log("Entity context not found in page.entityReference");
             
-            // Method 2: Try context data
-            const contextData = context as unknown as Record<string, unknown>;
-            console.log("Context keys:", Object.keys(contextData));
-            console.log("Context data:", contextData);
-            
-            // Method 3: Try mode context
-            const modeContext = contextData.mode as Record<string, unknown>;
-            if (modeContext?.contextInfo) {
-                console.log("Context info:", modeContext.contextInfo);
-            }
-            
-            // Method 4: Try parameters for entity info
-            const parameters = contextData.parameters as Record<string, unknown>;
-            if (parameters) {
-                console.log("Parameters:", Object.keys(parameters));
-                Object.keys(parameters).forEach(key => {
-                    console.log(`Parameter ${key}:`, parameters[key]);
-                });
-            }
-            
-            // Method 5: Try global Xrm object
+            // Fallback: Try global Xrm object
             const globalXrm = (window as unknown as { Xrm?: { Page?: { data?: { entity?: { getId: () => string; getEntityName: () => string } } } } }).Xrm;
             if (globalXrm?.Page?.data?.entity) {
                 const xrmEntity = globalXrm.Page.data.entity;
                 this._relatedEntityId = xrmEntity.getId().replace(/{|}/g, "");
                 this._relatedEntityName = xrmEntity.getEntityName();
-                console.log("Method 5 - Xrm.Page SUCCESS:", this._relatedEntityName, this._relatedEntityId);
+                console.log("Xrm.Page entity context SUCCESS:", this._relatedEntityName, this._relatedEntityId);
             } else {
-                console.log("Method 5 - Xrm.Page not available");
-                
-                // Method 6: Try parent window Xrm
-                try {
-                    const parentXrm = (window.parent as unknown as { Xrm?: { Page?: { data?: { entity?: { getId: () => string; getEntityName: () => string } } } } }).Xrm;
-                    if (parentXrm?.Page?.data?.entity) {
-                        const parentEntity = parentXrm.Page.data.entity;
-                        this._relatedEntityId = parentEntity.getId().replace(/{|}/g, "");
-                        this._relatedEntityName = parentEntity.getEntityName();
-                        console.log("Method 6 - Parent Xrm.Page SUCCESS:", this._relatedEntityName, this._relatedEntityId);
-                    } else {
-                        console.log("Method 6 - Parent Xrm.Page not available");
-                    }
-                } catch (error) {
-                    console.log("Method 6 - Parent window access failed:", error);
-                }
-                
-                // Method 7: Try URL parsing for entity info
-                const url = window.location.href;
-                console.log("Current URL:", url);
-                
-                // Look for entity patterns in URL
-                const entityPatterns = [
-                    /\/main\.aspx.*[?&]etn=([^&]+).*[?&]id=(%7B[^}]+%7D|[a-f0-9-]+)/i,
-                    /\/form\/([^/]+)\/([a-f0-9-]+)/i,
-                    /entityName=([^&]+).*id=([^&]+)/i,
-                    /\/([^/]+)\/form\/([a-f0-9-]{36})/i
-                ];
-                
-                let urlEntityFound = false;
-                for (const pattern of entityPatterns) {
-                    const match = url.match(pattern);
-                    if (match) {
-                        this._relatedEntityName = decodeURIComponent(match[1]);
-                        this._relatedEntityId = decodeURIComponent(match[2]).replace(/{|%7B|%7D|}/g, "");
-                        console.log("Method 7 - URL parsing SUCCESS:", this._relatedEntityName, this._relatedEntityId);
-                        urlEntityFound = true;
-                        break;
-                    }
-                }
-                
-                if (!urlEntityFound) {
-                    console.log("Method 7 - URL parsing FAILED");
-                    
-                    // Method 8: Try hardcoded entity for testing (temporary)
-                    console.log("Method 8 - Attempting hardcoded fallback for se_changeimpact entity");
-                    if (url.includes('se_changeimpact')) {
-                        console.log("URL contains 'se_changeimpact', attempting to extract ID...");
-                        const idMatch = url.match(/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/i);
-                        if (idMatch) {
-                            this._relatedEntityName = 'se_changeimpact';
-                            this._relatedEntityId = idMatch[0];
-                            console.log("Method 8 - Hardcoded fallback SUCCESS:", this._relatedEntityName, this._relatedEntityId);
-                        }
-                    }
-                    
-                    // Method 9: Try getting from context.client
-                    try {
-                        const clientContext = (context as unknown as { client?: Record<string, unknown> }).client;
-                        if (clientContext) {
-                            console.log("Method 9 - Client context:", clientContext);
-                        }
-                        
-                        // Method 10: Try getting from context.userSettings
-                        const userSettings = (context as unknown as { userSettings?: Record<string, unknown> }).userSettings;
-                        if (userSettings) {
-                            console.log("Method 10 - User settings:", userSettings);
-                        }
-                        
-                        // Method 11: Try checking all context properties
-                        console.log("Method 11 - Full context exploration:");
-                        console.log("Context type:", typeof context);
-                        console.log("Context constructor:", context.constructor.name);
-                        const contextObj = context as unknown as Record<string, unknown>;
-                        for (const key in contextObj) {
-                            const value = contextObj[key];
-                            if (value && typeof value === 'object') {
-                                console.log(`Context.${key}:`, value);
-                            }
-                        }
-                    } catch (error) {
-                        console.log("Error exploring context:", error);
-                    }
-                }
+                console.log("No entity context found");
             }
         }
 
@@ -291,74 +186,77 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
         console.log("Relationship Name:", this._relationshipName);
         
         try {
-            // For N:N relationships, query the target entity directly through the relationship
             const primaryNameAttr = this.getPrimaryNameAttribute(this._targetEntity);
             console.log("Primary Name Attribute:", primaryNameAttr);
 
-            // Method 1: Direct relationship navigation (with corrected case)
-            const relatedRecordsQuery = `${this._relatedEntityName}s(${this._relatedEntityId})/${this._relationshipName}?$select=${this._targetEntity}id,${primaryNameAttr}`;
-            console.log("Trying direct relationship query:", relatedRecordsQuery);
-            
+            // Method 1: Use cleaner FetchXML with intersect approach (from SenseiMultiSelectLookupField2)
+            const fetchXml = `
+                <fetch>
+                    <entity name="${this._relatedEntityName}">
+                        <attribute name="${this._relatedEntityName}id" />
+                        <link-entity name="${this._targetEntity}" from="${this._targetEntity}id" to="${this._targetEntity}id" link-type="inner" intersect="true">
+                            <attribute name="${this._targetEntity}id" alias="related_id" />
+                            <attribute name="${primaryNameAttr}" alias="related_name" />
+                        </link-entity>
+                        <filter>
+                            <condition attribute="${this._relatedEntityName}id" operator="eq" value="${this._relatedEntityId}" />
+                        </filter>
+                    </entity>
+                </fetch>
+            `;
+            console.log("Trying intersect FetchXML query:", fetchXml);
+
             try {
                 const result = await this._context.webAPI.retrieveMultipleRecords(
-                    this._targetEntity,
-                    relatedRecordsQuery
+                    this._relatedEntityName,
+                    `?fetchXml=${encodeURIComponent(fetchXml)}`
                 );
 
                 this._selectedRecords = result.entities.map((e: Record<string, unknown>) => ({
-                    id: (e[`${this._targetEntity}id`] as string),
-                    name: (e[primaryNameAttr] as string) || "Unnamed"
+                    id: (e["related_id"] as string),
+                    name: (e["related_name"] as string) || "Unnamed"
                 }));
-                console.log("Direct relationship query SUCCESS:", this._selectedRecords);
-            } catch (relationshipError) {
-                console.log("Direct relationship query failed, trying OData filter approach:", relationshipError);
+                console.log("Intersect FetchXML query SUCCESS:", this._selectedRecords);
+            } catch (intersectError) {
+                console.log("Intersect FetchXML failed, trying direct relationship navigation:", intersectError);
                 
-                // Method 2: Use OData filter with navigation
+                // Method 2: Direct relationship navigation (fallback)
+                const relatedRecordsQuery = `${this._relatedEntityName}s(${this._relatedEntityId})/${this._relationshipName}?$select=${this._targetEntity}id,${primaryNameAttr}`;
+                console.log("Trying direct relationship query:", relatedRecordsQuery);
+                
                 try {
-                    const filterQuery = `?$select=${this._targetEntity}id,${primaryNameAttr}&$filter=${this._relatedEntityName}s/any(r:r/${this._relatedEntityName}id eq ${this._relatedEntityId})`;
-                    console.log("Trying OData filter query:", filterQuery);
-                    
                     const result = await this._context.webAPI.retrieveMultipleRecords(
                         this._targetEntity,
-                        filterQuery
+                        relatedRecordsQuery
                     );
 
                     this._selectedRecords = result.entities.map((e: Record<string, unknown>) => ({
                         id: (e[`${this._targetEntity}id`] as string),
                         name: (e[primaryNameAttr] as string) || "Unnamed"
                     }));
-                    console.log("OData filter query SUCCESS:", this._selectedRecords);
-                } catch (filterError) {
-                    console.log("OData filter approach failed, trying FetchXML approach:", filterError);
+                    console.log("Direct relationship query SUCCESS:", this._selectedRecords);
+                } catch (relationshipError) {
+                    console.log("Direct relationship query failed, trying OData filter approach:", relationshipError);
                     
-                    // Method 3: Fallback to FetchXML approach for N:N relationships
-                    const fetchXml = `
-                        <fetch>
-                            <entity name="${this._targetEntity}">
-                                <attribute name="${this._targetEntity}id" />
-                                <attribute name="${primaryNameAttr}" />
-                                <link-entity name="${this._relationshipName}" from="${this._targetEntity}id" to="${this._targetEntity}id" link-type="inner">
-                                    <link-entity name="${this._relatedEntityName}" from="${this._relatedEntityName}id" to="${this._relatedEntityName}id" link-type="inner">
-                                        <filter>
-                                            <condition attribute="${this._relatedEntityName}id" operator="eq" value="${this._relatedEntityId}" />
-                                        </filter>
-                                    </link-entity>
-                                </link-entity>
-                            </entity>
-                        </fetch>
-                    `;
-                    console.log("Trying FetchXML query:", fetchXml);
+                    // Method 3: Use OData filter with navigation (final fallback)
+                    try {
+                        const filterQuery = `?$select=${this._targetEntity}id,${primaryNameAttr}&$filter=${this._relatedEntityName}s/any(r:r/${this._relatedEntityName}id eq ${this._relatedEntityId})`;
+                        console.log("Trying OData filter query:", filterQuery);
+                        
+                        const result = await this._context.webAPI.retrieveMultipleRecords(
+                            this._targetEntity,
+                            filterQuery
+                        );
 
-                    const fetchResult = await this._context.webAPI.retrieveMultipleRecords(
-                        this._targetEntity,
-                        `?fetchXml=${encodeURIComponent(fetchXml)}`
-                    );
-
-                    this._selectedRecords = fetchResult.entities.map((e: Record<string, unknown>) => ({
-                        id: (e[`${this._targetEntity}id`] as string),
-                        name: (e[primaryNameAttr] as string) || "Unnamed"
-                    }));
-                    console.log("FetchXML query SUCCESS:", this._selectedRecords);
+                        this._selectedRecords = result.entities.map((e: Record<string, unknown>) => ({
+                            id: (e[`${this._targetEntity}id`] as string),
+                            name: (e[primaryNameAttr] as string) || "Unnamed"
+                        }));
+                        console.log("OData filter query SUCCESS:", this._selectedRecords);
+                    } catch (filterError) {
+                        console.log("All methods failed:", filterError);
+                        this._selectedRecords = [];
+                    }
                 }
             }
 
