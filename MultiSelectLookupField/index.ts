@@ -1,13 +1,14 @@
 import { IInputs, IOutputs } from "./generated/ManifestTypes";
 import { MultiSelectLookup, IMultiSelectLookupProps } from "./MultiSelectLookup";
 import * as React from "react";
-import * as ReactDOM from "react-dom";
+import { createRoot, Root } from "react-dom/client";
 import { ITeamRecord } from "./types";
 
 export class MultiSelectLookupField implements ComponentFramework.StandardControl<IInputs, IOutputs> {
     private _container: HTMLDivElement;
     private _context: ComponentFramework.Context<IInputs>;
     private _notifyOutputChanged: () => void;
+    private _reactRoot: Root | null = null;
     private _allRecords: ITeamRecord[] = [];
     private _selectedRecords: ITeamRecord[] = [];
     private _selectedNames = "";
@@ -60,16 +61,98 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
                 });
             }
             
-            // Fallback: Try to get from URL or other context
+            // Method 5: Try global Xrm object
             const globalXrm = (window as unknown as { Xrm?: { Page?: { data?: { entity?: { getId: () => string; getEntityName: () => string } } } } }).Xrm;
             if (globalXrm?.Page?.data?.entity) {
                 const xrmEntity = globalXrm.Page.data.entity;
                 this._relatedEntityId = xrmEntity.getId().replace(/{|}/g, "");
                 this._relatedEntityName = xrmEntity.getEntityName();
-                console.log("Method 2 - Xrm.Page SUCCESS:", this._relatedEntityName, this._relatedEntityId);
+                console.log("Method 5 - Xrm.Page SUCCESS:", this._relatedEntityName, this._relatedEntityId);
             } else {
-                console.log("Method 2 - Xrm.Page not available");
-                console.log("WARNING: Could not detect entity context - related records will not load");
+                console.log("Method 5 - Xrm.Page not available");
+                
+                // Method 6: Try parent window Xrm
+                try {
+                    const parentXrm = (window.parent as unknown as { Xrm?: { Page?: { data?: { entity?: { getId: () => string; getEntityName: () => string } } } } }).Xrm;
+                    if (parentXrm?.Page?.data?.entity) {
+                        const parentEntity = parentXrm.Page.data.entity;
+                        this._relatedEntityId = parentEntity.getId().replace(/{|}/g, "");
+                        this._relatedEntityName = parentEntity.getEntityName();
+                        console.log("Method 6 - Parent Xrm.Page SUCCESS:", this._relatedEntityName, this._relatedEntityId);
+                    } else {
+                        console.log("Method 6 - Parent Xrm.Page not available");
+                    }
+                } catch (error) {
+                    console.log("Method 6 - Parent window access failed:", error);
+                }
+                
+                // Method 7: Try URL parsing for entity info
+                const url = window.location.href;
+                console.log("Current URL:", url);
+                
+                // Look for entity patterns in URL
+                const entityPatterns = [
+                    /\/main\.aspx.*[?&]etn=([^&]+).*[?&]id=(%7B[^}]+%7D|[a-f0-9-]+)/i,
+                    /\/form\/([^/]+)\/([a-f0-9-]+)/i,
+                    /entityName=([^&]+).*id=([^&]+)/i,
+                    /\/([^/]+)\/form\/([a-f0-9-]{36})/i
+                ];
+                
+                let urlEntityFound = false;
+                for (const pattern of entityPatterns) {
+                    const match = url.match(pattern);
+                    if (match) {
+                        this._relatedEntityName = decodeURIComponent(match[1]);
+                        this._relatedEntityId = decodeURIComponent(match[2]).replace(/{|%7B|%7D|}/g, "");
+                        console.log("Method 7 - URL parsing SUCCESS:", this._relatedEntityName, this._relatedEntityId);
+                        urlEntityFound = true;
+                        break;
+                    }
+                }
+                
+                if (!urlEntityFound) {
+                    console.log("Method 7 - URL parsing FAILED");
+                    
+                    // Method 8: Try hardcoded entity for testing (temporary)
+                    console.log("Method 8 - Attempting hardcoded fallback for se_changeimpact entity");
+                    if (url.includes('se_changeimpact')) {
+                        console.log("URL contains 'se_changeimpact', attempting to extract ID...");
+                        const idMatch = url.match(/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/i);
+                        if (idMatch) {
+                            this._relatedEntityName = 'se_changeimpact';
+                            this._relatedEntityId = idMatch[0];
+                            console.log("Method 8 - Hardcoded fallback SUCCESS:", this._relatedEntityName, this._relatedEntityId);
+                        }
+                    }
+                    
+                    // Method 9: Try getting from context.client
+                    try {
+                        const clientContext = (context as unknown as { client?: Record<string, unknown> }).client;
+                        if (clientContext) {
+                            console.log("Method 9 - Client context:", clientContext);
+                        }
+                        
+                        // Method 10: Try getting from context.userSettings
+                        const userSettings = (context as unknown as { userSettings?: Record<string, unknown> }).userSettings;
+                        if (userSettings) {
+                            console.log("Method 10 - User settings:", userSettings);
+                        }
+                        
+                        // Method 11: Try checking all context properties
+                        console.log("Method 11 - Full context exploration:");
+                        console.log("Context type:", typeof context);
+                        console.log("Context constructor:", context.constructor.name);
+                        const contextObj = context as unknown as Record<string, unknown>;
+                        for (const key in contextObj) {
+                            const value = contextObj[key];
+                            if (value && typeof value === 'object') {
+                                console.log(`Context.${key}:`, value);
+                            }
+                        }
+                    } catch (error) {
+                        console.log("Error exploring context:", error);
+                    }
+                }
             }
         }
 
@@ -77,6 +160,16 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
         this._targetEntity = context.parameters.targetEntity.raw || "";
         this._relationshipName = context.parameters.relationshipName.raw || "";
         this._outputToField = context.parameters.outputToField.raw !== false;
+        
+        // Fix relationship name case - PCF parameters are case-sensitive but might get lowercased
+        console.log("Raw relationship name from parameters:", this._relationshipName);
+        
+        // Apply known correct casing for this specific relationship
+        if (this._relationshipName.toLowerCase() === "se_changeimpact_se_team") {
+            console.log("Applying correct case for se_changeimpact_se_team relationship");
+            this._relationshipName = "se_ChangeImpact_se_Team";
+            console.log("Corrected relationship name:", this._relationshipName);
+        }
 
         console.log("=== INIT CONFIGURATION ===");
         console.log("Init - Entity:", this._relatedEntityName, "ID:", this._relatedEntityId);
@@ -87,6 +180,24 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
             relationshipName: context.parameters.relationshipName.raw,
             outputToField: context.parameters.outputToField.raw
         });
+
+        // Test relationship name variations for case sensitivity
+        console.log("=== RELATIONSHIP NAME ANALYSIS ===");
+        console.log("Original relationship name:", this._relationshipName);
+        console.log("Lowercase:", this._relationshipName.toLowerCase());
+        console.log("Uppercase:", this._relationshipName.toUpperCase());
+        
+        // Check for common Dataverse relationship name patterns
+        const relationshipVariations = [
+            this._relationshipName,
+            this._relationshipName.toLowerCase(),
+            this._relationshipName.toUpperCase(),
+            // Try with different entity order
+            `${this._targetEntity}_${this._relatedEntityName}`,
+            `${this._relatedEntityName}_${this._targetEntity}`,
+        ];
+        
+        console.log("Relationship variations to test:", relationshipVariations);
 
         console.log("Final entity context:", {
             relatedEntityName: this._relatedEntityName,
@@ -184,7 +295,7 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
             const primaryNameAttr = this.getPrimaryNameAttribute(this._targetEntity);
             console.log("Primary Name Attribute:", primaryNameAttr);
 
-            // Method 1: Try direct relationship navigation
+            // Method 1: Direct relationship navigation (with corrected case)
             const relatedRecordsQuery = `${this._relatedEntityName}s(${this._relatedEntityId})/${this._relationshipName}?$select=${this._targetEntity}id,${primaryNameAttr}`;
             console.log("Trying direct relationship query:", relatedRecordsQuery);
             
@@ -461,7 +572,12 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
         };
 
         const element = React.createElement(MultiSelectLookup, props);
-        ReactDOM.render(element, this._container);
+        
+        // Use React 18 createRoot API
+        if (!this._reactRoot) {
+            this._reactRoot = createRoot(this._container);
+        }
+        this._reactRoot.render(element);
     }
 
     public getOutputs(): IOutputs {
@@ -477,7 +593,10 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
     }
 
     public destroy(): void {
-        ReactDOM.unmountComponentAtNode(this._container);
+        if (this._reactRoot) {
+            this._reactRoot.unmount();
+            this._reactRoot = null;
+        }
     }
 }
 
