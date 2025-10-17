@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<manifest>
+  <control namespace="Sensei" constructor="MultiSelectLookupField" version="1.0.1" display-name-key="Sensei Multi-Select Lookup Field" description-key="Multi-select lookup control with bound outputs for field-level binding" control-type="standard">
+    <external-service-usage enabled="false" />
+    
+    <!-- Target entity and relationship configuration -->
+    <property name="targetEntity" display-name-key="Target Entity" description-key="Logical name of the target entity (e.g., se_team)" of-type="SingleLine.Text" usage="input" required="true" />
+    <property name="relationshipName" display-name-key="Relationship Name" description-key="N:N relationship schema name (e.g., se_changeimpact_se_team)" of-type="SingleLine.Text" usage="input" required="true" />
+    
+    <!-- Filter XML configuration - manual FetchXML input -->
+    <property name="filterXmlManual" display-name-key="Filter XML" description-key="FetchXML filter for the target entity records" of-type="Multiple" usage="input" required="false" />
+    
+    <!-- Output configuration -->
+    <property name="outputToField" display-name-key="Output Names to Field" description-key="If enabled, selected names will be written to the bound field" of-type="TwoOptions" usage="input" required="false" default-value="true" />
+    
+    
+    <!-- Bound properties - selectedNames now binds to the control field -->
+    <property name="selectedNames" display-name-key="Selected Names" description-key="Selected record names (bind this control to a multiline field)" of-type="Multiple" usage="bound" required="true" />
+    <property name="selectedIds" display-name-key="Selected IDs (Output)" description-key="Semicolon-separated IDs of selected records - bind to another field" of-type="Multiple" usage="bound" required="false" />
+    
+    <resources>
+      <code path="index.ts" order="1"/>
+    </resources>
+    
+    <feature-usage>
+      <uses-feature name="Utility" required="true" />
+      <uses-feature name="WebAPI" required="true" />
+    </feature-usage>
+  </control>
+</manifest>
