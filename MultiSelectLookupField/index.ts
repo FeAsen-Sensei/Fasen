@@ -25,29 +25,51 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
         state: ComponentFramework.Dictionary,
         container: HTMLDivElement
     ): Promise<void> {
+        // Version logging for deployment verification
+        console.log("🚀 PCF COMPONENT LOADED - VERSION 1.1.0 🚀");
+        console.log("Component: SenseiMultiSelectLookupField");
+        console.log("Timestamp:", new Date().toISOString());
+        
         this._context = context;
         this._notifyOutputChanged = notifyOutputChanged;
         this._container = container;
 
         // Get current entity context - use simple, direct approach
         console.log("=== DETECTING ENTITY CONTEXT ===");
-        const entityRef = ((context as unknown) as { page?: { entityReference?: { id: string; logicalName: string }; getClientUrl?: () => string } }).page?.entityReference;
-        if (entityRef) {
-            this._relatedEntityId = entityRef.id.replace(/{|}/g, "");
-            this._relatedEntityName = entityRef.logicalName;
-            console.log("Entity context SUCCESS:", this._relatedEntityName, this._relatedEntityId);
+        
+        // Method 1: Try contextInfo from mode (as seen in attached files)
+        const modeWithContext = context.mode as unknown as { 
+            contextInfo?: { 
+                entityId: string; 
+                entityTypeName: string; 
+            } 
+        };
+        if (modeWithContext?.contextInfo?.entityId && modeWithContext?.contextInfo?.entityTypeName) {
+            this._relatedEntityId = modeWithContext.contextInfo.entityId.replace(/{|}/g, "");
+            this._relatedEntityName = modeWithContext.contextInfo.entityTypeName;
+            console.log("Entity context SUCCESS (contextInfo):", this._relatedEntityName, this._relatedEntityId);
         } else {
-            console.log("Entity context not found in page.entityReference");
+            console.log("contextInfo method failed, trying page.entityReference...");
             
-            // Fallback: Try global Xrm object
-            const globalXrm = (window as unknown as { Xrm?: { Page?: { data?: { entity?: { getId: () => string; getEntityName: () => string } } } } }).Xrm;
-            if (globalXrm?.Page?.data?.entity) {
-                const xrmEntity = globalXrm.Page.data.entity;
-                this._relatedEntityId = xrmEntity.getId().replace(/{|}/g, "");
-                this._relatedEntityName = xrmEntity.getEntityName();
-                console.log("Xrm.Page entity context SUCCESS:", this._relatedEntityName, this._relatedEntityId);
+            // Method 2: Try page.entityReference
+            const entityRef = ((context as unknown) as { page?: { entityReference?: { id: string; logicalName: string }; getClientUrl?: () => string } }).page?.entityReference;
+            if (entityRef) {
+                this._relatedEntityId = entityRef.id.replace(/{|}/g, "");
+                this._relatedEntityName = entityRef.logicalName;
+                console.log("Entity context SUCCESS (page.entityReference):", this._relatedEntityName, this._relatedEntityId);
             } else {
-                console.log("No entity context found");
+                console.log("page.entityReference method failed, trying Xrm.Page...");
+                
+                // Method 3: Try global Xrm object
+                const globalXrm = (window as unknown as { Xrm?: { Page?: { data?: { entity?: { getId: () => string; getEntityName: () => string } } } } }).Xrm;
+                if (globalXrm?.Page?.data?.entity) {
+                    const xrmEntity = globalXrm.Page.data.entity;
+                    this._relatedEntityId = xrmEntity.getId().replace(/{|}/g, "");
+                    this._relatedEntityName = xrmEntity.getEntityName();
+                    console.log("Entity context SUCCESS (Xrm.Page):", this._relatedEntityName, this._relatedEntityId);
+                } else {
+                    console.log("❌ All entity context detection methods failed");
+                }
             }
         }
 
