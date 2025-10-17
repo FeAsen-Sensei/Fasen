@@ -252,26 +252,27 @@ export const MultiSelectLookup: React.FC<IMultiSelectLookupProps> = ({
                     <span aria-hidden="true">{isOpen ? "▲" : "▼"}</span>
                 </button>
 
-                {isOpen && (
-                    <div 
-                        ref={dropdownRef}
-                        className={styles.dropdownPanel}
-                        role="listbox"
-                        aria-label="Select items"
-                        style={{
-                            // Debug styling to make dropdown more visible
-                            position: "absolute",
-                            top: "100%",
-                            left: "0",
-                            right: "0",
-                            backgroundColor: "white",
-                            border: "2px solid red", // Debug border
-                            boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
-                            zIndex: 999999,
-                            marginTop: "2px",
-                            minHeight: "100px", // Ensure some height
-                        }}
-                    >
+                <div 
+                    ref={dropdownRef}
+                    className={styles.dropdownPanel}
+                    role="listbox"
+                    aria-label="Select items"
+                    style={{
+                        // Always render but hide/show with display
+                        display: isOpen ? "block" : "none",
+                        position: "absolute",
+                        top: "100%",
+                        left: "0",
+                        right: "0",
+                        backgroundColor: "white",
+                        border: "3px solid red", // Very visible debug border
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.8)",
+                        zIndex: 999999,
+                        marginTop: "2px",
+                        minHeight: "150px", // Larger height
+                        width: "100%",
+                    }}
+                >
                         <div className={styles.buttonContainer}>
                             <button 
                                 onClick={(e) => {
@@ -356,8 +357,7 @@ export const MultiSelectLookup: React.FC<IMultiSelectLookupProps> = ({
                                 ))
                             )}
                         </div>
-                    </div>
-                )}
+                </div>
             </div>
         </div>
     );

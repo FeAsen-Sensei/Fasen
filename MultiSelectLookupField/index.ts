@@ -28,11 +28,49 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
         this._notifyOutputChanged = notifyOutputChanged;
         this._container = container;
 
-        // Get current entity context
-        const entityRef = ((context as unknown) as { page: { entityReference: { id: string; logicalName: string }; getClientUrl: () => string } }).page?.entityReference;
-        if (entityRef) {
-            this._relatedEntityId = entityRef.id.replace(/{|}/g, "");
-            this._relatedEntityName = entityRef.logicalName;
+        // Get current entity context - try multiple methods
+        console.log("=== DETECTING ENTITY CONTEXT ===");
+        
+        // Method 1: Try page context
+        const pageContext = ((context as unknown) as { page?: { entityReference?: { id: string; logicalName: string }; getClientUrl?: () => string } });
+        if (pageContext?.page?.entityReference) {
+            this._relatedEntityId = pageContext.page.entityReference.id.replace(/{|}/g, "");
+            this._relatedEntityName = pageContext.page.entityReference.logicalName;
+            console.log("Method 1 - Page context SUCCESS:", this._relatedEntityName, this._relatedEntityId);
+        } else {
+            console.log("Method 1 - Page context FAILED, trying context data...");
+            
+            // Method 2: Try context data
+            const contextData = context as unknown as Record<string, unknown>;
+            console.log("Context keys:", Object.keys(contextData));
+            console.log("Context data:", contextData);
+            
+            // Method 3: Try mode context
+            const modeContext = contextData.mode as Record<string, unknown>;
+            if (modeContext?.contextInfo) {
+                console.log("Context info:", modeContext.contextInfo);
+            }
+            
+            // Method 4: Try parameters for entity info
+            const parameters = contextData.parameters as Record<string, unknown>;
+            if (parameters) {
+                console.log("Parameters:", Object.keys(parameters));
+                Object.keys(parameters).forEach(key => {
+                    console.log(`Parameter ${key}:`, parameters[key]);
+                });
+            }
+            
+            // Fallback: Try to get from URL or other context
+            const globalXrm = (window as unknown as { Xrm?: { Page?: { data?: { entity?: { getId: () => string; getEntityName: () => string } } } } }).Xrm;
+            if (globalXrm?.Page?.data?.entity) {
+                const xrmEntity = globalXrm.Page.data.entity;
+                this._relatedEntityId = xrmEntity.getId().replace(/{|}/g, "");
+                this._relatedEntityName = xrmEntity.getEntityName();
+                console.log("Method 2 - Xrm.Page SUCCESS:", this._relatedEntityName, this._relatedEntityId);
+            } else {
+                console.log("Method 2 - Xrm.Page not available");
+                console.log("WARNING: Could not detect entity context - related records will not load");
+            }
         }
 
         // Get configuration
@@ -48,6 +86,13 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
             targetEntity: context.parameters.targetEntity.raw,
             relationshipName: context.parameters.relationshipName.raw,
             outputToField: context.parameters.outputToField.raw
+        });
+
+        console.log("Final entity context:", {
+            relatedEntityName: this._relatedEntityName,
+            relatedEntityId: this._relatedEntityId,
+            targetEntity: this._targetEntity,
+            relationshipName: this._relationshipName
         });
 
         // Load initial data
@@ -67,8 +112,13 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
             await this.loadAllRecords();
 
             // Load currently selected/related records
-            if (this._relatedEntityId) {
+            if (this._relatedEntityId && this._relatedEntityName) {
+                console.log("Loading related records for:", this._relatedEntityName, this._relatedEntityId);
                 await this.loadRelatedRecords();
+            } else {
+                console.log("Skipping related records load - missing entity context");
+                console.log("Related Entity ID:", this._relatedEntityId);
+                console.log("Related Entity Name:", this._relatedEntityName);
             }
         } catch (error) {
             console.error("Error loading data:", error);
