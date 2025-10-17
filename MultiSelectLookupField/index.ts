@@ -40,8 +40,15 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
         this._relationshipName = context.parameters.relationshipName.raw || "";
         this._outputToField = context.parameters.outputToField.raw !== false;
 
+        console.log("=== INIT CONFIGURATION ===");
         console.log("Init - Entity:", this._relatedEntityName, "ID:", this._relatedEntityId);
         console.log("Init - Target:", this._targetEntity, "Relationship:", this._relationshipName);
+        console.log("Init - Output to Field:", this._outputToField);
+        console.log("Raw parameters:", {
+            targetEntity: context.parameters.targetEntity.raw,
+            relationshipName: context.parameters.relationshipName.raw,
+            outputToField: context.parameters.outputToField.raw
+        });
 
         // Load initial data
         await this.loadData();
@@ -116,41 +123,54 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
     }
 
     private async loadRelatedRecords(): Promise<void> {
+        console.log("=== LOAD RELATED RECORDS START ===");
+        console.log("Related Entity Name:", this._relatedEntityName);
+        console.log("Related Entity ID:", this._relatedEntityId);
+        console.log("Target Entity:", this._targetEntity);
+        console.log("Relationship Name:", this._relationshipName);
+        
         try {
             // For N:N relationships, query the target entity directly through the relationship
             const primaryNameAttr = this.getPrimaryNameAttribute(this._targetEntity);
+            console.log("Primary Name Attribute:", primaryNameAttr);
 
-            // Use WebAPI to get related records through the N:N relationship
+            // Method 1: Try direct relationship navigation
             const relatedRecordsQuery = `${this._relatedEntityName}s(${this._relatedEntityId})/${this._relationshipName}?$select=${this._targetEntity}id,${primaryNameAttr}`;
+            console.log("Trying direct relationship query:", relatedRecordsQuery);
             
             try {
                 const result = await this._context.webAPI.retrieveMultipleRecords(
                     this._targetEntity,
-                    `?$select=${this._targetEntity}id,${primaryNameAttr}&$filter=${this._relatedEntityName}s/any(r:r/${this._relatedEntityName}id eq ${this._relatedEntityId})`
+                    relatedRecordsQuery
                 );
 
                 this._selectedRecords = result.entities.map((e: Record<string, unknown>) => ({
                     id: (e[`${this._targetEntity}id`] as string),
                     name: (e[primaryNameAttr] as string) || "Unnamed"
                 }));
-            } catch (filterError) {
-                console.log("OData filter approach failed, trying direct relationship query:", filterError);
+                console.log("Direct relationship query SUCCESS:", this._selectedRecords);
+            } catch (relationshipError) {
+                console.log("Direct relationship query failed, trying OData filter approach:", relationshipError);
                 
-                // Alternative approach: Use the relationship navigation directly
+                // Method 2: Use OData filter with navigation
                 try {
+                    const filterQuery = `?$select=${this._targetEntity}id,${primaryNameAttr}&$filter=${this._relatedEntityName}s/any(r:r/${this._relatedEntityName}id eq ${this._relatedEntityId})`;
+                    console.log("Trying OData filter query:", filterQuery);
+                    
                     const result = await this._context.webAPI.retrieveMultipleRecords(
                         this._targetEntity,
-                        relatedRecordsQuery
+                        filterQuery
                     );
 
                     this._selectedRecords = result.entities.map((e: Record<string, unknown>) => ({
                         id: (e[`${this._targetEntity}id`] as string),
                         name: (e[primaryNameAttr] as string) || "Unnamed"
                     }));
-                } catch (relationshipError) {
-                    console.log("Direct relationship query failed, trying FetchXML approach:", relationshipError);
+                    console.log("OData filter query SUCCESS:", this._selectedRecords);
+                } catch (filterError) {
+                    console.log("OData filter approach failed, trying FetchXML approach:", filterError);
                     
-                    // Fallback to FetchXML approach for N:N relationships
+                    // Method 3: Fallback to FetchXML approach for N:N relationships
                     const fetchXml = `
                         <fetch>
                             <entity name="${this._targetEntity}">
@@ -166,6 +186,7 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
                             </entity>
                         </fetch>
                     `;
+                    console.log("Trying FetchXML query:", fetchXml);
 
                     const fetchResult = await this._context.webAPI.retrieveMultipleRecords(
                         this._targetEntity,
@@ -176,15 +197,18 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
                         id: (e[`${this._targetEntity}id`] as string),
                         name: (e[primaryNameAttr] as string) || "Unnamed"
                     }));
+                    console.log("FetchXML query SUCCESS:", this._selectedRecords);
                 }
             }
 
             this._selectedNames = this._selectedRecords.map(r => r.name).join("; ");
             this._selectedIds = this._selectedRecords.map(r => r.id).join("; ");
 
-            console.log("Loaded related records:", this._selectedRecords.length);
+            console.log("Final loaded related records:", this._selectedRecords.length);
+            console.log("Selected Names:", this._selectedNames);
+            console.log("Selected IDs:", this._selectedIds);
         } catch (error) {
-            console.error("Error loading related records:", error);
+            console.error("ERROR loading related records:", error);
             this._selectedRecords = [];
             this._selectedNames = "";
             this._selectedIds = "";

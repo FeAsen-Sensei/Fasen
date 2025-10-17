@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <manifest>
-  <control namespace="Sensei" constructor="MultiSelectLookupField" version="1.0.2" display-name-key="Sensei Multi-Select Lookup Field" description-key="Multi-select lookup control with bound outputs for field-level binding" control-type="standard">
+  <control namespace="Sensei" constructor="MultiSelectLookupField" version="1.0.3" display-name-key="Sensei Multi-Select Lookup Field" description-key="Multi-select lookup control with bound outputs for field-level binding" control-type="standard">
     <external-service-usage enabled="false" />
     
     <!-- Target entity and relationship configuration -->

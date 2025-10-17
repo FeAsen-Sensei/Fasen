@@ -147,6 +147,7 @@ export const MultiSelectLookup: React.FC<IMultiSelectLookupProps> = ({
     const [searchText, setSearchText] = React.useState("");
 
     console.log("isOpen state:", isOpen);
+    console.log("Dropdown should be visible:", isOpen ? "YES" : "NO");
     const containerRef = React.useRef<HTMLDivElement>(null);
     const dropdownRef = React.useRef<HTMLDivElement>(null);
 
@@ -257,6 +258,19 @@ export const MultiSelectLookup: React.FC<IMultiSelectLookupProps> = ({
                         className={styles.dropdownPanel}
                         role="listbox"
                         aria-label="Select items"
+                        style={{
+                            // Debug styling to make dropdown more visible
+                            position: "absolute",
+                            top: "100%",
+                            left: "0",
+                            right: "0",
+                            backgroundColor: "white",
+                            border: "2px solid red", // Debug border
+                            boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+                            zIndex: 999999,
+                            marginTop: "2px",
+                            minHeight: "100px", // Ensure some height
+                        }}
                     >
                         <div className={styles.buttonContainer}>
                             <button 
