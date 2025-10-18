@@ -121,6 +121,8 @@ const useStyles = makeStyles({
     relativeContainer: {
         position: "relative",
         width: "100%",
+        // Ensure dropdown is not clipped
+        zIndex: 1000,
     },
     emptyStateText: {
         color: tokens.colorNeutralForeground3,
@@ -136,18 +138,9 @@ export const MultiSelectLookup: React.FC<IMultiSelectLookupProps> = ({
     onSelectionChange,
     disabled = false,
 }) => {
-    console.log("=== MULTISELECTLOOKUP RENDER ===");
-    console.log("allRecords:", allRecords?.length || 0, allRecords);
-    console.log("selectedRecords:", selectedRecords?.length || 0, selectedRecords);
-    console.log("disabled:", disabled);
-    console.log("Component is rendering successfully");
-
     const styles = useStyles();
     const [isOpen, setIsOpen] = React.useState(false);
     const [searchText, setSearchText] = React.useState("");
-
-    console.log("isOpen state:", isOpen);
-    console.log("Dropdown should be visible:", isOpen ? "YES" : "NO");
     const containerRef = React.useRef<HTMLDivElement>(null);
     const dropdownRef = React.useRef<HTMLDivElement>(null);
 
@@ -163,16 +156,11 @@ export const MultiSelectLookup: React.FC<IMultiSelectLookupProps> = ({
     );
 
     const handleToggleRecord = React.useCallback((record: ITeamRecord) => {
-        console.log("Toggle record:", record.name);
-        console.log("Current selection:", selectedRecords.length);
-        console.log("Is currently selected:", selectedIds.has(record.id));
-
         try {
             const newSelection = selectedIds.has(record.id)
                 ? selectedRecords.filter(r => r.id !== record.id)
                 : [...selectedRecords, record];
 
-            console.log("New selection count:", newSelection.length);
             onSelectionChange(newSelection);
         } catch (error) {
             console.error("Error in handleToggleRecord:", error);
@@ -201,31 +189,33 @@ export const MultiSelectLookup: React.FC<IMultiSelectLookupProps> = ({
                     </span>
                 ) : (
                     selectedRecords.map(record => (
-                        <Tag
-                            key={record.id}
-                            appearance="outline"
-                            dismissible
-                            dismissIcon={
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleRemoveTag(record);
-                                    }}
-                                    style={{ 
-                                        background: 'none', 
-                                        border: 'none', 
-                                        cursor: 'pointer', 
-                                        padding: 0, 
-                                        margin: 0,
-                                        color: tokens.colorNeutralForeground2
-                                    }}
-                                >
-                                    <Dismiss20Regular />
-                                </button>
-                            }
-                        >
-                            {record.name}
-                        </Tag>
+                        <div key={record.id} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                            <Tag
+                                appearance="outline"
+                            >
+                                {record.name}
+                            </Tag>
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleRemoveTag(record);
+                                }}
+                                style={{ 
+                                    background: 'none', 
+                                    border: 'none', 
+                                    cursor: 'pointer', 
+                                    padding: '4px', 
+                                    margin: 0,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    color: tokens.colorNeutralForeground2
+                                }}
+                                aria-label={`Remove ${record.name}`}
+                                type="button"
+                            >
+                                <Dismiss20Regular />
+                            </button>
+                        </div>
                     ))
                 )}
             </div>
@@ -236,11 +226,7 @@ export const MultiSelectLookup: React.FC<IMultiSelectLookupProps> = ({
                     onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        console.log("=== BUTTON CLICKED ===");
-                        console.log("Current isOpen:", isOpen);
-                        const newIsOpen = !isOpen;
-                        setIsOpen(newIsOpen);
-                        console.log("Setting isOpen to:", newIsOpen);
+                        setIsOpen(!isOpen);
                     }}
                     disabled={disabled}
                     aria-haspopup="listbox"
@@ -252,33 +238,18 @@ export const MultiSelectLookup: React.FC<IMultiSelectLookupProps> = ({
                     <span aria-hidden="true">{isOpen ? "▲" : "▼"}</span>
                 </button>
 
-                <div 
-                    ref={dropdownRef}
-                    className={styles.dropdownPanel}
-                    role="listbox"
-                    aria-label="Select items"
-                    style={{
-                        // Always render but hide/show with display
-                        display: isOpen ? "block" : "none",
-                        position: "absolute",
-                        top: "100%",
-                        left: "0",
-                        right: "0",
-                        backgroundColor: "white",
-                        border: "3px solid red", // Very visible debug border
-                        boxShadow: "0 4px 12px rgba(0,0,0,0.8)",
-                        zIndex: 999999,
-                        marginTop: "2px",
-                        minHeight: "150px", // Larger height
-                        width: "100%",
-                    }}
-                >
+                {isOpen && (
+                    <div 
+                        ref={dropdownRef}
+                        className={styles.dropdownPanel}
+                        role="listbox"
+                        aria-label="Select items"
+                    >
                         <div className={styles.buttonContainer}>
                             <button 
                                 onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    console.log("Select All clicked");
                                     handleSelectAll();
                                 }}
                                 type="button"
@@ -298,8 +269,7 @@ export const MultiSelectLookup: React.FC<IMultiSelectLookupProps> = ({
                                 onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    console.log("Clear All clicked");
-                                    handleClearAll();
+                                    onSelectionChange([]);
                                 }}
                                 type="button"
                                 style={{
@@ -357,7 +327,8 @@ export const MultiSelectLookup: React.FC<IMultiSelectLookupProps> = ({
                                 ))
                             )}
                         </div>
-                </div>
+                    </div>
+                )}
             </div>
         </div>
     );

@@ -26,10 +26,10 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
         container: HTMLDivElement
     ): Promise<void> {
         // Version logging for deployment verification
-        console.log("🚀 PCF COMPONENT LOADED - VERSION 1.1.7 🚀");
+        console.log("🚀 PCF COMPONENT LOADED - VERSION 1.1.9 🚀");
         console.log("Component: SenseiMultiSelectLookupField");
         console.log("Timestamp:", new Date().toISOString());
-        console.log("Enhancement: Fixed fallback to lowercase + cleaned logging");
+        console.log("Enhancement: Removed RelationshipDefinitions API + fixed nested button warning");
         console.log("Cache buster:", Math.random());
         
         this._context = context;
@@ -206,25 +206,12 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
         }
     }
 
-    private async getIntersectionEntityName(relationshipName: string): Promise<string | null> {
-        try {
-            console.log("Querying relationship metadata for:", relationshipName);
-            const relationshipQuery = `?$filter=SchemaName eq '${relationshipName}'&$select=SchemaName,IntersectEntityName`;
-            const relationshipResult = await this._context.webAPI.retrieveMultipleRecords("RelationshipDefinitions", relationshipQuery);
-            
-            if (relationshipResult.entities && relationshipResult.entities.length > 0) {
-                const intersectEntityName = relationshipResult.entities[0].IntersectEntityName as string;
-                console.log("Found intersection entity name (schema):", intersectEntityName);
-                
-                // Convert from PascalCase schema name to lowercase logical name
-                const logicalName = intersectEntityName.toLowerCase();
-                console.log("Converted to logical name:", logicalName);
-                return logicalName;
-            }
-        } catch (error) {
-            console.log("Failed to query relationship metadata:", error);
-        }
-        return null;
+    private getIntersectionEntityName(relationshipName: string): string {
+        // RelationshipDefinitions API is not available in all environments
+        // Use direct lowercase conversion of the relationship schema name
+        const logicalName = relationshipName.toLowerCase();
+        console.log("Using intersection entity name:", logicalName);
+        return logicalName;
     }
 
     private async loadRelatedRecords(): Promise<void> {
@@ -238,11 +225,8 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
             const primaryNameAttr = this.getPrimaryNameAttribute(this._targetEntity);
             console.log("Primary Name Attribute:", primaryNameAttr);
 
-            // First, try to get the actual intersection entity name from relationship metadata
-            const intersectionEntityName = await this.getIntersectionEntityName(this._relationshipName);
-            const entityToQuery = intersectionEntityName || this._relationshipName.toLowerCase();
-            
-            console.log("Using entity for intersection query:", entityToQuery);
+            // Get the intersection entity name (lowercase version of relationship name)
+            const entityToQuery = this.getIntersectionEntityName(this._relationshipName);
 
             // Method 1: Query the intersection entity directly for N:N relationships
             const fetchXml = `
@@ -260,13 +244,7 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
                     </entity>
                 </fetch>
             `;
-            console.log("=== FETCHXML FOR TESTING ===");
-            console.log("FetchXML Query:");
-            console.log(fetchXml);
-            console.log("=== END FETCHXML ===");
-
             try {
-                console.log("Executing FetchXML against intersection entity:", entityToQuery);
                 const fetchQuery = `?fetchXml=${encodeURIComponent(fetchXml)}`;
                 
                 const result = await this._context.webAPI.retrieveMultipleRecords(
@@ -274,13 +252,11 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
                     fetchQuery
                 );
 
-                console.log("Raw FetchXML result:", result);
                 this._selectedRecords = result.entities.map((e: Record<string, unknown>) => ({
                     id: (e["related_id"] as string),
                     name: (e["related_name"] as string) || "Unnamed"
                 }));
-                console.log("Mapped selected records:", this._selectedRecords);
-                console.log("Intersection FetchXML query SUCCESS:", this._selectedRecords);
+                console.log("Loaded selected records:", this._selectedRecords.length);
             } catch (intersectError) {
                 console.log("Intersection FetchXML failed, trying direct relationship navigation:", intersectError);
                 
