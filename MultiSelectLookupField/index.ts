@@ -26,8 +26,8 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
         container: HTMLDivElement
     ): Promise<void> {
         // Version logging for deployment verification
-        console.log("🚀 PCF COMPONENT LOADED - VERSION 1.1.0 🚀");
-        console.log("Component: SenseiMultiSelectLookupField");
+        console.log("🚀 PCF COMPONENT LOADED - VERSION 1.1.1 🚀");
+        console.log("Component: SenseiMultiSelectLookupField - Hardcoded se_changeimpact");
         console.log("Timestamp:", new Date().toISOString());
         
         this._context = context;
@@ -211,34 +211,44 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
             const primaryNameAttr = this.getPrimaryNameAttribute(this._targetEntity);
             console.log("Primary Name Attribute:", primaryNameAttr);
 
-            // Method 1: Use cleaner FetchXML with intersect approach (from SenseiMultiSelectLookupField2)
+            // Method 1: Hardcoded FetchXML for se_changeimpact -> se_team relationship
             const fetchXml = `
                 <fetch>
-                    <entity name="${this._relatedEntityName}">
-                        <attribute name="${this._relatedEntityName}id" />
+                    <entity name="se_changeimpact">
+                        <attribute name="se_changeimpactid" />
                         <link-entity name="${this._targetEntity}" from="${this._targetEntity}id" to="${this._targetEntity}id" link-type="inner" intersect="true">
                             <attribute name="${this._targetEntity}id" alias="related_id" />
                             <attribute name="${primaryNameAttr}" alias="related_name" />
                         </link-entity>
                         <filter>
-                            <condition attribute="${this._relatedEntityName}id" operator="eq" value="${this._relatedEntityId}" />
+                            <condition attribute="se_changeimpactid" operator="eq" value="${this._relatedEntityId}" />
                         </filter>
                     </entity>
                 </fetch>
             `;
-            console.log("Trying intersect FetchXML query:", fetchXml);
+            console.log("=== FETCHXML FOR TESTING ===");
+            console.log("FetchXML Query:");
+            console.log(fetchXml);
+            console.log("=== END FETCHXML ===");
 
             try {
+                console.log("Executing FetchXML against entity: se_changeimpact");
+                const fetchQuery = `?fetchXml=${encodeURIComponent(fetchXml)}`;
+                console.log("Full WebAPI query URL: se_changeimpacts" + fetchQuery);
+                console.log("Encoded FetchXML:", encodeURIComponent(fetchXml));
+                
                 const result = await this._context.webAPI.retrieveMultipleRecords(
-                    this._relatedEntityName,
-                    `?fetchXml=${encodeURIComponent(fetchXml)}`
+                    "se_changeimpact",
+                    fetchQuery
                 );
 
+                console.log("Raw FetchXML result:", result);
                 this._selectedRecords = result.entities.map((e: Record<string, unknown>) => ({
                     id: (e["related_id"] as string),
                     name: (e["related_name"] as string) || "Unnamed"
                 }));
-                console.log("Intersect FetchXML query SUCCESS:", this._selectedRecords);
+                console.log("Mapped selected records:", this._selectedRecords);
+                console.log("Hardcoded FetchXML query SUCCESS:", this._selectedRecords);
             } catch (intersectError) {
                 console.log("Intersect FetchXML failed, trying direct relationship navigation:", intersectError);
                 
