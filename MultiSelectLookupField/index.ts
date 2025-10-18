@@ -26,9 +26,11 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
         container: HTMLDivElement
     ): Promise<void> {
         // Version logging for deployment verification
-        console.log("🚀 PCF COMPONENT LOADED - VERSION 1.1.1 🚀");
-        console.log("Component: SenseiMultiSelectLookupField - Hardcoded se_changeimpact");
+        console.log("🚀 PCF COMPONENT LOADED - VERSION 1.1.7 🚀");
+        console.log("Component: SenseiMultiSelectLookupField");
         console.log("Timestamp:", new Date().toISOString());
+        console.log("Enhancement: Fixed fallback to lowercase + cleaned logging");
+        console.log("Cache buster:", Math.random());
         
         this._context = context;
         this._notifyOutputChanged = notifyOutputChanged;
@@ -69,6 +71,10 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
                     console.log("Entity context SUCCESS (Xrm.Page):", this._relatedEntityName, this._relatedEntityId);
                 } else {
                     console.log("❌ All entity context detection methods failed");
+                    // Set empty fallback values
+                    this._relatedEntityId = '';
+                    this._relatedEntityName = '';
+                    console.log("No entity context available");
                 }
             }
         }
@@ -139,7 +145,7 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
             // Load all available records
             await this.loadAllRecords();
 
-            // Load currently selected/related records
+            // Load related records if we have entity context
             if (this._relatedEntityId && this._relatedEntityName) {
                 console.log("Loading related records for:", this._relatedEntityName, this._relatedEntityId);
                 await this.loadRelatedRecords();
@@ -200,6 +206,27 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
         }
     }
 
+    private async getIntersectionEntityName(relationshipName: string): Promise<string | null> {
+        try {
+            console.log("Querying relationship metadata for:", relationshipName);
+            const relationshipQuery = `?$filter=SchemaName eq '${relationshipName}'&$select=SchemaName,IntersectEntityName`;
+            const relationshipResult = await this._context.webAPI.retrieveMultipleRecords("RelationshipDefinitions", relationshipQuery);
+            
+            if (relationshipResult.entities && relationshipResult.entities.length > 0) {
+                const intersectEntityName = relationshipResult.entities[0].IntersectEntityName as string;
+                console.log("Found intersection entity name (schema):", intersectEntityName);
+                
+                // Convert from PascalCase schema name to lowercase logical name
+                const logicalName = intersectEntityName.toLowerCase();
+                console.log("Converted to logical name:", logicalName);
+                return logicalName;
+            }
+        } catch (error) {
+            console.log("Failed to query relationship metadata:", error);
+        }
+        return null;
+    }
+
     private async loadRelatedRecords(): Promise<void> {
         console.log("=== LOAD RELATED RECORDS START ===");
         console.log("Related Entity Name:", this._relatedEntityName);
@@ -211,18 +238,25 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
             const primaryNameAttr = this.getPrimaryNameAttribute(this._targetEntity);
             console.log("Primary Name Attribute:", primaryNameAttr);
 
-            // Method 1: Hardcoded FetchXML for se_changeimpact -> se_team relationship
+            // First, try to get the actual intersection entity name from relationship metadata
+            const intersectionEntityName = await this.getIntersectionEntityName(this._relationshipName);
+            const entityToQuery = intersectionEntityName || this._relationshipName.toLowerCase();
+            
+            console.log("Using entity for intersection query:", entityToQuery);
+
+            // Method 1: Query the intersection entity directly for N:N relationships
             const fetchXml = `
                 <fetch>
-                    <entity name="se_changeimpact">
-                        <attribute name="se_changeimpactid" />
-                        <link-entity name="${this._targetEntity}" from="${this._targetEntity}id" to="${this._targetEntity}id" link-type="inner" intersect="true">
+                    <entity name="${entityToQuery}">
+                        <link-entity name="${this._relatedEntityName}" from="${this._relatedEntityName}id" to="${this._relatedEntityName}id" link-type="inner">
+                            <filter>
+                                <condition attribute="${this._relatedEntityName}id" operator="eq" value="${this._relatedEntityId}" />
+                            </filter>
+                        </link-entity>
+                        <link-entity name="${this._targetEntity}" from="${this._targetEntity}id" to="${this._targetEntity}id" link-type="inner">
                             <attribute name="${this._targetEntity}id" alias="related_id" />
                             <attribute name="${primaryNameAttr}" alias="related_name" />
                         </link-entity>
-                        <filter>
-                            <condition attribute="se_changeimpactid" operator="eq" value="${this._relatedEntityId}" />
-                        </filter>
                     </entity>
                 </fetch>
             `;
@@ -232,13 +266,11 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
             console.log("=== END FETCHXML ===");
 
             try {
-                console.log("Executing FetchXML against entity: se_changeimpact");
+                console.log("Executing FetchXML against intersection entity:", entityToQuery);
                 const fetchQuery = `?fetchXml=${encodeURIComponent(fetchXml)}`;
-                console.log("Full WebAPI query URL: se_changeimpacts" + fetchQuery);
-                console.log("Encoded FetchXML:", encodeURIComponent(fetchXml));
                 
                 const result = await this._context.webAPI.retrieveMultipleRecords(
-                    "se_changeimpact",
+                    entityToQuery,
                     fetchQuery
                 );
 
@@ -248,9 +280,9 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
                     name: (e["related_name"] as string) || "Unnamed"
                 }));
                 console.log("Mapped selected records:", this._selectedRecords);
-                console.log("Hardcoded FetchXML query SUCCESS:", this._selectedRecords);
+                console.log("Intersection FetchXML query SUCCESS:", this._selectedRecords);
             } catch (intersectError) {
-                console.log("Intersect FetchXML failed, trying direct relationship navigation:", intersectError);
+                console.log("Intersection FetchXML failed, trying direct relationship navigation:", intersectError);
                 
                 // Method 2: Direct relationship navigation (fallback)
                 const relatedRecordsQuery = `${this._relatedEntityName}s(${this._relatedEntityId})/${this._relationshipName}?$select=${this._targetEntity}id,${primaryNameAttr}`;
