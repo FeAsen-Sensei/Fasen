@@ -63,7 +63,7 @@
     <comment>Display name for the control</comment>
   </data>
   <data name="MultiSelectLookupField_Desc_Key" xml:space="preserve">
-    <value>Multi-Select Lookup Field with N:N Relationship Support - Version 1.2.16</value>
+    <value>Multi-Select Lookup Field with N:N Relationship Support - Version 1.2.17</value>
     <comment>Description of the control</comment>
   </data>
 </root>

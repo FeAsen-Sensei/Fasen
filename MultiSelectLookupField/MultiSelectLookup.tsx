@@ -7,11 +7,8 @@ import {
     Input,
     Checkbox,
     Tag,
-    FluentProvider,
-    webLightTheme,
-    webDarkTheme,
 } from "@fluentui/react-components";
-import { Search20Regular, Dismiss20Regular } from "@fluentui/react-icons";
+import { Search20Regular } from "@fluentui/react-icons";
 
 export interface IMultiSelectLookupProps {
     allRecords: ITeamRecord[];
@@ -73,7 +70,7 @@ const useStyles = makeStyles({
         position: "fixed",
         maxHeight: "320px",
         overflowY: "auto",
-        backgroundColor: tokens.colorNeutralBackground1,
+        backgroundColor: "#ffffff",
         border: `2px solid ${tokens.colorNeutralStroke1}`,
         borderRadius: tokens.borderRadiusMedium,
         boxShadow: tokens.shadow28,
@@ -87,12 +84,12 @@ const useStyles = makeStyles({
     searchContainer: {
         padding: "8px",
         borderBottom: `1px solid ${tokens.colorNeutralStroke2}`,
-        backgroundColor: tokens.colorNeutralBackground1,
+        backgroundColor: "#ffffff",
     },
     listContainer: {
         maxHeight: "200px",
         overflowY: "auto",
-        backgroundColor: tokens.colorNeutralBackground1,
+        backgroundColor: "#ffffff",
     },
     listItem: {
         display: "flex",
@@ -100,7 +97,7 @@ const useStyles = makeStyles({
         gap: "18px",
         padding: "12px 16px",
         cursor: "pointer",
-        backgroundColor: tokens.colorNeutralBackground1,
+        backgroundColor: "#ffffff",
         color: tokens.colorNeutralForeground1,
         borderBottom: `1px solid ${tokens.colorNeutralStroke2}`,
         ":hover": {
@@ -124,12 +121,27 @@ const useStyles = makeStyles({
         gap: "8px",
         padding: "8px",
         borderBottom: `1px solid ${tokens.colorNeutralStroke2}`,
-        backgroundColor: tokens.colorNeutralBackground1,
+        backgroundColor: "#ffffff",
+    },
+    actionButton: {
+        padding: "4px 8px",
+        backgroundColor: "#ffffff",
+        color: tokens.colorNeutralForeground1,
+        border: `1px solid ${tokens.colorNeutralStroke1}`,
+        borderRadius: tokens.borderRadiusMedium,
+        cursor: "pointer",
+        fontSize: tokens.fontSizeBase200,
+        ":hover": {
+            backgroundColor: tokens.colorNeutralBackground1Hover,
+        },
+        ":disabled": {
+            opacity: 0.6,
+            cursor: "not-allowed",
+        },
     },
     relativeContainer: {
         position: "relative",
         width: "100%",
-        // Ensure dropdown is not clipped
         zIndex: 1000,
     },
     emptyStateText: {
@@ -151,38 +163,7 @@ export const MultiSelectLookup: React.FC<IMultiSelectLookupProps> = ({
     const [isOpen, setIsOpen] = React.useState(false);
     const [searchText, setSearchText] = React.useState("");
     const [dropdownPosition, setDropdownPosition] = React.useState<{ top: number; left: number; width: number } | null>(null);
-    const containerRef = React.useRef<HTMLDivElement>(null);
-    const dropdownRef = React.useRef<HTMLDivElement>(null);
     const buttonRef = React.useRef<HTMLButtonElement>(null);
-
-    // Detect theme based on browser/system preference
-    const [isDarkMode, setIsDarkMode] = React.useState(() => {
-        if (typeof window !== 'undefined') {
-            return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-        }
-        return false;
-    });
-
-    // Listen for theme changes
-    React.useEffect(() => {
-        if (typeof window !== 'undefined' && window.matchMedia) {
-            const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-            const handler = (e: MediaQueryListEvent) => setIsDarkMode(e.matches);
-            
-            // Modern browsers
-            if (mediaQuery.addEventListener) {
-                mediaQuery.addEventListener('change', handler);
-                return () => mediaQuery.removeEventListener('change', handler);
-            }
-            // Legacy browsers
-            else if (mediaQuery.addListener) {
-                mediaQuery.addListener(handler);
-                return () => mediaQuery.removeListener(handler);
-            }
-        }
-    }, []);
-
-    const currentTheme = isDarkMode ? webDarkTheme : webLightTheme;
 
     const filteredRecords = React.useMemo(() => {
         if (!searchText) return allRecords;
@@ -211,24 +192,18 @@ export const MultiSelectLookup: React.FC<IMultiSelectLookupProps> = ({
         onSelectionChange(filteredRecords);
     }, [filteredRecords, onSelectionChange]);
 
-    const handleClearAll = React.useCallback(() => {
-        onSelectionChange([]);
-    }, [onSelectionChange]);
-
     const handleRemoveTag = React.useCallback((record: ITeamRecord) => {
         const newSelection = selectedRecords.filter(r => r.id !== record.id);
         onSelectionChange(newSelection);
     }, [selectedRecords, onSelectionChange]);
 
-    // Calculate dropdown position when opening
     const updateDropdownPosition = React.useCallback(() => {
         if (buttonRef.current && isOpen) {
             const rect = buttonRef.current.getBoundingClientRect();
-            console.log("Button rect:", rect);
             setDropdownPosition({
                 top: rect.bottom + 2,
                 left: rect.left,
-                width: rect.width
+                width: rect.width - 2
             });
         } else {
             setDropdownPosition(null);
@@ -265,17 +240,14 @@ export const MultiSelectLookup: React.FC<IMultiSelectLookupProps> = ({
                 )}
             </div>
 
-            <div className={styles.relativeContainer} ref={containerRef}>
+            <div className={styles.relativeContainer}>
                 <button
                     ref={buttonRef}
                     className={styles.dropdownButton}
                     onClick={(e) => {
-                        console.log("Dropdown button clicked - current state:", isOpen);
                         e.preventDefault();
                         e.stopPropagation();
-                        const newState = !isOpen;
-                        setIsOpen(newState);
-                        console.log("Dropdown new state:", newState);
+                        setIsOpen(!isOpen);
                     }}
                     disabled={disabled}
                     aria-haspopup="listbox"
@@ -286,22 +258,19 @@ export const MultiSelectLookup: React.FC<IMultiSelectLookupProps> = ({
                     Select items ({selectedRecords.length} selected)
                     <span aria-hidden="true">{isOpen ? "▲" : "▼"}</span>
                 </button>
-
             </div>
 
             {isOpen && dropdownPosition && createPortal(
-                <FluentProvider theme={currentTheme}>
-                    <div 
-                        ref={dropdownRef}
-                        className={styles.dropdownPanel}
-                        role="listbox"
-                        aria-label="Select items"
-                        style={{
-                            top: `${dropdownPosition.top}px`,
-                            left: `${dropdownPosition.left}px`,
-                            width: `${dropdownPosition.width}px`,
-                        }}
-                    >
+                <div 
+                    className={styles.dropdownPanel}
+                    role="listbox"
+                    aria-label="Select items"
+                    style={{
+                        top: `${dropdownPosition.top}px`,
+                        left: `${dropdownPosition.left}px`,
+                        width: `${dropdownPosition.width}px`,
+                    }}
+                >
                     <div className={styles.buttonContainer}>
                         <button 
                             onClick={(e) => {
@@ -311,16 +280,7 @@ export const MultiSelectLookup: React.FC<IMultiSelectLookupProps> = ({
                             }}
                             type="button"
                             disabled={isProcessing}
-                            style={{
-                                padding: "4px 8px",
-                                backgroundColor: tokens.colorNeutralBackground1,
-                                color: tokens.colorNeutralForeground1,
-                                border: `1px solid ${tokens.colorNeutralStroke1}`,
-                                borderRadius: tokens.borderRadiusMedium,
-                                cursor: isProcessing ? "not-allowed" : "pointer",
-                                fontSize: tokens.fontSizeBase200,
-                                opacity: isProcessing ? 0.6 : 1,
-                            }}
+                            className={styles.actionButton}
                         >
                             {isProcessing ? "Processing..." : "Select All"}
                         </button>
@@ -332,16 +292,7 @@ export const MultiSelectLookup: React.FC<IMultiSelectLookupProps> = ({
                             }}
                             type="button"
                             disabled={isProcessing}
-                            style={{
-                                padding: "4px 8px",
-                                backgroundColor: tokens.colorNeutralBackground1,
-                                color: tokens.colorNeutralForeground1,
-                                border: `1px solid ${tokens.colorNeutralStroke1}`,
-                                borderRadius: tokens.borderRadiusMedium,
-                                cursor: isProcessing ? "not-allowed" : "pointer",
-                                fontSize: tokens.fontSizeBase200,
-                                opacity: isProcessing ? 0.6 : 1,
-                            }}
+                            className={styles.actionButton}
                         >
                             {isProcessing ? "Processing..." : "Clear All"}
                         </button>
@@ -386,8 +337,7 @@ export const MultiSelectLookup: React.FC<IMultiSelectLookupProps> = ({
                             ))
                         )}
                     </div>
-                </div>
-                </FluentProvider>,
+                </div>,
                 document.body
             )}
         </div>
