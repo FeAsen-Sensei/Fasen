@@ -65,7 +65,7 @@ const useStyles = makeStyles({
         },
     },
     dropdownPanel: {
-        position: "fixed",
+        position: "absolute",
         maxHeight: "320px",
         overflowY: "auto",
         backgroundColor: tokens.colorNeutralBackground1,
@@ -323,10 +323,6 @@ export const MultiSelectLookup: React.FC<IMultiSelectLookupProps> = ({
                                 <div
                                     key={record.id}
                                     className={styles.listItem}
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleToggleRecord(record);
-                                    }}
                                     role="option"
                                     aria-selected={selectedIds.has(record.id)}
                                     tabIndex={0}

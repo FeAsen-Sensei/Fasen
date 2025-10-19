@@ -26,7 +26,7 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
         container: HTMLDivElement
     ): Promise<void> {
         // Version logging for deployment verification
-        console.log("🚀 PCF v1.2.6 - Fixed Tag Styling (X inside, #f5f5f5 background) 🚀");
+        console.log("🚀 PCF v1.2.7 - Fixed dropdown positioning (absolute) + Duplicate association prevention 🚀");
         
         this._context = context;
         this._notifyOutputChanged = notifyOutputChanged;
@@ -247,6 +247,12 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
         console.log("Associating record:", targetRecordId);
         
         try {
+            // Check if already associated to prevent duplicate errors
+            if (this._selectedRecords.some(r => r.id === targetRecordId)) {
+                console.log("Record already associated, skipping:", targetRecordId);
+                return;
+            }
+
             // Use the proper webAPI.execute with Associate request
             // This is the correct way to handle N:N relationships in PCF
             const associateRequest = {
@@ -276,6 +282,12 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
             await webAPIWithExecute.execute(associateRequest);
             console.log("Successfully associated record");
         } catch (error: unknown) {
+            // Handle duplicate record error gracefully (error code 2147746359)
+            const err = error as { errorCode?: number; code?: number };
+            if (err?.errorCode === 2147746359 || err?.code === 2147746359) {
+                console.log("Record already associated (duplicate), ignoring error");
+                return;
+            }
             console.error("Error associating record:", error);
             throw error;
         }
