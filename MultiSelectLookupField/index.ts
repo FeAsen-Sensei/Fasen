@@ -26,20 +26,13 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
         container: HTMLDivElement
     ): Promise<void> {
         // Version logging for deployment verification
-        console.log("🚀 PCF COMPONENT LOADED - VERSION 1.1.9 🚀");
-        console.log("Component: SenseiMultiSelectLookupField");
-        console.log("Timestamp:", new Date().toISOString());
-        console.log("Enhancement: Removed RelationshipDefinitions API + fixed nested button warning");
-        console.log("Cache buster:", Math.random());
+        console.log("🚀 PCF v1.2.0 - Fixed N:N association/disassociation logic 🚀");
         
         this._context = context;
         this._notifyOutputChanged = notifyOutputChanged;
         this._container = container;
 
-        // Get current entity context - use simple, direct approach
-        console.log("=== DETECTING ENTITY CONTEXT ===");
-        
-        // Method 1: Try contextInfo from mode (as seen in attached files)
+        // Get current entity context
         const modeWithContext = context.mode as unknown as { 
             contextInfo?: { 
                 entityId: string; 
@@ -49,32 +42,20 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
         if (modeWithContext?.contextInfo?.entityId && modeWithContext?.contextInfo?.entityTypeName) {
             this._relatedEntityId = modeWithContext.contextInfo.entityId.replace(/{|}/g, "");
             this._relatedEntityName = modeWithContext.contextInfo.entityTypeName;
-            console.log("Entity context SUCCESS (contextInfo):", this._relatedEntityName, this._relatedEntityId);
         } else {
-            console.log("contextInfo method failed, trying page.entityReference...");
-            
-            // Method 2: Try page.entityReference
             const entityRef = ((context as unknown) as { page?: { entityReference?: { id: string; logicalName: string }; getClientUrl?: () => string } }).page?.entityReference;
             if (entityRef) {
                 this._relatedEntityId = entityRef.id.replace(/{|}/g, "");
                 this._relatedEntityName = entityRef.logicalName;
-                console.log("Entity context SUCCESS (page.entityReference):", this._relatedEntityName, this._relatedEntityId);
             } else {
-                console.log("page.entityReference method failed, trying Xrm.Page...");
-                
-                // Method 3: Try global Xrm object
                 const globalXrm = (window as unknown as { Xrm?: { Page?: { data?: { entity?: { getId: () => string; getEntityName: () => string } } } } }).Xrm;
                 if (globalXrm?.Page?.data?.entity) {
                     const xrmEntity = globalXrm.Page.data.entity;
                     this._relatedEntityId = xrmEntity.getId().replace(/{|}/g, "");
                     this._relatedEntityName = xrmEntity.getEntityName();
-                    console.log("Entity context SUCCESS (Xrm.Page):", this._relatedEntityName, this._relatedEntityId);
                 } else {
-                    console.log("❌ All entity context detection methods failed");
-                    // Set empty fallback values
                     this._relatedEntityId = '';
                     this._relatedEntityName = '';
-                    console.log("No entity context available");
                 }
             }
         }
@@ -84,49 +65,15 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
         this._relationshipName = context.parameters.relationshipName.raw || "";
         this._outputToField = context.parameters.outputToField.raw !== false;
         
-        // Fix relationship name case - PCF parameters are case-sensitive but might get lowercased
-        console.log("Raw relationship name from parameters:", this._relationshipName);
-        
-        // Apply known correct casing for this specific relationship
+        // Apply known correct casing for relationships
         if (this._relationshipName.toLowerCase() === "se_changeimpact_se_team") {
-            console.log("Applying correct case for se_changeimpact_se_team relationship");
             this._relationshipName = "se_ChangeImpact_se_Team";
-            console.log("Corrected relationship name:", this._relationshipName);
         }
 
-        console.log("=== INIT CONFIGURATION ===");
-        console.log("Init - Entity:", this._relatedEntityName, "ID:", this._relatedEntityId);
-        console.log("Init - Target:", this._targetEntity, "Relationship:", this._relationshipName);
-        console.log("Init - Output to Field:", this._outputToField);
-        console.log("Raw parameters:", {
-            targetEntity: context.parameters.targetEntity.raw,
-            relationshipName: context.parameters.relationshipName.raw,
-            outputToField: context.parameters.outputToField.raw
-        });
-
-        // Test relationship name variations for case sensitivity
-        console.log("=== RELATIONSHIP NAME ANALYSIS ===");
-        console.log("Original relationship name:", this._relationshipName);
-        console.log("Lowercase:", this._relationshipName.toLowerCase());
-        console.log("Uppercase:", this._relationshipName.toUpperCase());
-        
-        // Check for common Dataverse relationship name patterns
-        const relationshipVariations = [
-            this._relationshipName,
-            this._relationshipName.toLowerCase(),
-            this._relationshipName.toUpperCase(),
-            // Try with different entity order
-            `${this._targetEntity}_${this._relatedEntityName}`,
-            `${this._relatedEntityName}_${this._targetEntity}`,
-        ];
-        
-        console.log("Relationship variations to test:", relationshipVariations);
-
-        console.log("Final entity context:", {
-            relatedEntityName: this._relatedEntityName,
-            relatedEntityId: this._relatedEntityId,
-            targetEntity: this._targetEntity,
-            relationshipName: this._relationshipName
+        console.log("Initialized:", {
+            entity: this._relatedEntityName,
+            target: this._targetEntity,
+            relationship: this._relationshipName
         });
 
         // Load initial data
@@ -142,17 +89,9 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
 
     private async loadData(): Promise<void> {
         try {
-            // Load all available records
             await this.loadAllRecords();
-
-            // Load related records if we have entity context
             if (this._relatedEntityId && this._relatedEntityName) {
-                console.log("Loading related records for:", this._relatedEntityName, this._relatedEntityId);
                 await this.loadRelatedRecords();
-            } else {
-                console.log("Skipping related records load - missing entity context");
-                console.log("Related Entity ID:", this._relatedEntityId);
-                console.log("Related Entity Name:", this._relatedEntityName);
             }
         } catch (error) {
             console.error("Error loading data:", error);
@@ -198,8 +137,6 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
                 id: (e[`${this._targetEntity}id`] as string),
                 name: (e[primaryNameAttr] as string) || "Unnamed"
             }));
-
-            console.log("Loaded all records:", this._allRecords.length);
         } catch (error) {
             console.error("Error loading all records:", error);
             this._allRecords = [];
@@ -207,28 +144,16 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
     }
 
     private getIntersectionEntityName(relationshipName: string): string {
-        // RelationshipDefinitions API is not available in all environments
         // Use direct lowercase conversion of the relationship schema name
-        const logicalName = relationshipName.toLowerCase();
-        console.log("Using intersection entity name:", logicalName);
-        return logicalName;
+        return relationshipName.toLowerCase();
     }
 
     private async loadRelatedRecords(): Promise<void> {
-        console.log("=== LOAD RELATED RECORDS START ===");
-        console.log("Related Entity Name:", this._relatedEntityName);
-        console.log("Related Entity ID:", this._relatedEntityId);
-        console.log("Target Entity:", this._targetEntity);
-        console.log("Relationship Name:", this._relationshipName);
-        
         try {
             const primaryNameAttr = this.getPrimaryNameAttribute(this._targetEntity);
-            console.log("Primary Name Attribute:", primaryNameAttr);
-
-            // Get the intersection entity name (lowercase version of relationship name)
             const entityToQuery = this.getIntersectionEntityName(this._relationshipName);
 
-            // Method 1: Query the intersection entity directly for N:N relationships
+            // Query the intersection entity to get related records
             const fetchXml = `
                 <fetch>
                     <entity name="${entityToQuery}">
@@ -244,70 +169,23 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
                     </entity>
                 </fetch>
             `;
-            try {
-                const fetchQuery = `?fetchXml=${encodeURIComponent(fetchXml)}`;
-                
-                const result = await this._context.webAPI.retrieveMultipleRecords(
-                    entityToQuery,
-                    fetchQuery
-                );
 
-                this._selectedRecords = result.entities.map((e: Record<string, unknown>) => ({
-                    id: (e["related_id"] as string),
-                    name: (e["related_name"] as string) || "Unnamed"
-                }));
-                console.log("Loaded selected records:", this._selectedRecords.length);
-            } catch (intersectError) {
-                console.log("Intersection FetchXML failed, trying direct relationship navigation:", intersectError);
-                
-                // Method 2: Direct relationship navigation (fallback)
-                const relatedRecordsQuery = `${this._relatedEntityName}s(${this._relatedEntityId})/${this._relationshipName}?$select=${this._targetEntity}id,${primaryNameAttr}`;
-                console.log("Trying direct relationship query:", relatedRecordsQuery);
-                
-                try {
-                    const result = await this._context.webAPI.retrieveMultipleRecords(
-                        this._targetEntity,
-                        relatedRecordsQuery
-                    );
+            const result = await this._context.webAPI.retrieveMultipleRecords(
+                entityToQuery,
+                `?fetchXml=${encodeURIComponent(fetchXml)}`
+            );
 
-                    this._selectedRecords = result.entities.map((e: Record<string, unknown>) => ({
-                        id: (e[`${this._targetEntity}id`] as string),
-                        name: (e[primaryNameAttr] as string) || "Unnamed"
-                    }));
-                    console.log("Direct relationship query SUCCESS:", this._selectedRecords);
-                } catch (relationshipError) {
-                    console.log("Direct relationship query failed, trying OData filter approach:", relationshipError);
-                    
-                    // Method 3: Use OData filter with navigation (final fallback)
-                    try {
-                        const filterQuery = `?$select=${this._targetEntity}id,${primaryNameAttr}&$filter=${this._relatedEntityName}s/any(r:r/${this._relatedEntityName}id eq ${this._relatedEntityId})`;
-                        console.log("Trying OData filter query:", filterQuery);
-                        
-                        const result = await this._context.webAPI.retrieveMultipleRecords(
-                            this._targetEntity,
-                            filterQuery
-                        );
-
-                        this._selectedRecords = result.entities.map((e: Record<string, unknown>) => ({
-                            id: (e[`${this._targetEntity}id`] as string),
-                            name: (e[primaryNameAttr] as string) || "Unnamed"
-                        }));
-                        console.log("OData filter query SUCCESS:", this._selectedRecords);
-                    } catch (filterError) {
-                        console.log("All methods failed:", filterError);
-                        this._selectedRecords = [];
-                    }
-                }
-            }
+            this._selectedRecords = result.entities.map((e: Record<string, unknown>) => ({
+                id: (e["related_id"] as string),
+                name: (e["related_name"] as string) || "Unnamed"
+            }));
 
             this._selectedNames = this._selectedRecords.map(r => r.name).join("; ");
             this._selectedIds = this._selectedRecords.map(r => r.id).join("; ");
 
-            console.log("Final loaded related records:", this._selectedRecords.length);
-            console.log("Selected Names:", this._selectedNames);
-            console.log("Selected IDs:", this._selectedIds);
+            console.log("Loaded related records:", this._selectedRecords.length);
         } catch (error) {
-            console.error("ERROR loading related records:", error);
+            console.error("Error loading related records:", error);
             this._selectedRecords = [];
             this._selectedNames = "";
             this._selectedIds = "";
@@ -334,8 +212,6 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
     }
 
     private async handleSelectionChange(selectedRecords: ITeamRecord[]): Promise<void> {
-        console.log("Selection changed:", selectedRecords.length, "records");
-
         // Determine what changed
         const currentIds = new Set(this._selectedRecords.map(r => r.id));
         const newIds = new Set(selectedRecords.map(r => r.id));
@@ -343,7 +219,7 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
         const added = selectedRecords.filter(r => !currentIds.has(r.id));
         const removed = this._selectedRecords.filter(r => !newIds.has(r.id));
 
-        console.log("Added:", added.length, "Removed:", removed.length);
+        console.log("Selection change - Added:", added.length, "Removed:", removed.length);
 
         try {
             // Update relationships via WebAPI
@@ -360,9 +236,6 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
             this._selectedNames = selectedRecords.map(r => r.name).join("; ");
             this._selectedIds = selectedRecords.map(r => r.id).join("; ");
 
-            console.log("Updated selection - Names:", this._selectedNames);
-            console.log("Updated selection - IDs:", this._selectedIds);
-
             // Notify outputs changed
             this._notifyOutputChanged();
         } catch (error) {
@@ -371,133 +244,65 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
     }
 
     private async associateRecord(targetRecordId: string): Promise<void> {
-        console.log("=== ASSOCIATE RECORD START ===");
-        console.log("Target Record ID:", targetRecordId);
-        console.log("Related Entity Name:", this._relatedEntityName);
-        console.log("Related Entity ID:", this._relatedEntityId);
-        console.log("Relationship Name:", this._relationshipName);
-        console.log("Target Entity:", this._targetEntity);
+        console.log("Associating record:", targetRecordId);
         
         try {
-            // Method 1: Try direct WebAPI association
-            const associationData = {
-                "@odata.id": `${this._targetEntity}s(${targetRecordId})`
-            };
+            // Use the intersection entity name (lowercase) to create the association
+            const intersectionEntityName = this.getIntersectionEntityName(this._relationshipName);
+            
+            // Create a record in the intersection entity
+            const associationData: Record<string, string> = {};
+            associationData[`${this._relatedEntityName}id`] = this._relatedEntityId;
+            associationData[`${this._targetEntity}id`] = targetRecordId;
 
             await this._context.webAPI.createRecord(
-                this._relationshipName,
+                intersectionEntityName,
                 associationData
             );
 
-            console.log("Associated record via WebAPI (N:N):", targetRecordId);
-        } catch (webApiError: unknown) {
-            console.log("WebAPI association failed, trying OData $ref approach:", webApiError);
-            
-            try {
-                // Method 2: Use OData $ref endpoint
-                const clientUrl = ((this._context as unknown) as { page: { getClientUrl: () => string } }).page.getClientUrl();
-                const relationshipUrl = `${clientUrl}/api/data/v9.2/${this._relatedEntityName}s(${this._relatedEntityId})/${this._relationshipName}/$ref`;
-                
-                const body = {
-                    "@odata.id": `${clientUrl}/api/data/v9.2/${this._targetEntity}s(${targetRecordId})`
-                };
-
-                const request = {
-                    method: "POST",
-                    uri: relationshipUrl,
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify(body)
-                };
-
-                await (this._context.webAPI as unknown as { execute: (request: unknown) => Promise<unknown> }).execute(request);
-
-                console.log("Associated record via OData $ref (N:N):", targetRecordId);
-            } catch (odataError: unknown) {
-                console.error("OData association failed, trying 1:N approach:", odataError);
-                // If N:N fails, try 1:N relationship by updating lookup field
-                await this.createLookupRelationship(targetRecordId);
-            }
+            console.log("Successfully associated record");
+        } catch (error: unknown) {
+            console.error("Error associating record:", error);
+            throw error;
         }
     }
 
     private async disassociateRecord(targetRecordId: string): Promise<void> {
+        console.log("Disassociating record:", targetRecordId);
+        
         try {
-            // Method 1: Use OData $ref endpoint for disassociation
-            const clientUrl = ((this._context as unknown) as { page: { getClientUrl: () => string } }).page.getClientUrl();
-            const relationshipUrl = `${clientUrl}/api/data/v9.2/${this._relatedEntityName}s(${this._relatedEntityId})/${this._relationshipName}(${targetRecordId})/$ref`;
-
-            const request = {
-                method: "DELETE",
-                uri: relationshipUrl
-            };
-
-            await (this._context.webAPI as unknown as { execute: (request: unknown) => Promise<unknown> }).execute(request);
-
-            console.log("Disassociated record via OData $ref (N:N):", targetRecordId);
-        } catch (odataError: unknown) {
-            console.log("OData disassociation failed, trying WebAPI delete approach:", odataError);
+            // Use Web API to disassociate N:N relationship
+            // The correct format is to use the intersection entity name (lowercase)
+            const intersectionEntityName = this.getIntersectionEntityName(this._relationshipName);
             
-            try {
-                // Method 2: Try to find and delete the intersection record
-                const intersectionQuery = `${this._relationshipName}?$filter=${this._relatedEntityName}id eq ${this._relatedEntityId} and ${this._targetEntity}id eq ${targetRecordId}`;
-                
-                const intersectionResult = await this._context.webAPI.retrieveMultipleRecords(
-                    this._relationshipName,
-                    intersectionQuery
-                );
+            // Query the intersection entity to find the association record
+            const fetchXml = `
+                <fetch>
+                    <entity name="${intersectionEntityName}">
+                        <attribute name="${intersectionEntityName}id" />
+                        <filter>
+                            <condition attribute="${this._relatedEntityName}id" operator="eq" value="${this._relatedEntityId}" />
+                            <condition attribute="${this._targetEntity}id" operator="eq" value="${targetRecordId}" />
+                        </filter>
+                    </entity>
+                </fetch>
+            `;
+            
+            const result = await this._context.webAPI.retrieveMultipleRecords(
+                intersectionEntityName,
+                `?fetchXml=${encodeURIComponent(fetchXml)}`
+            );
 
-                if (intersectionResult.entities.length > 0) {
-                    const intersectionId = intersectionResult.entities[0][`${this._relationshipName}id`] as string;
-                    await this._context.webAPI.deleteRecord(this._relationshipName, intersectionId);
-                    console.log("Disassociated record via intersection delete (N:N):", targetRecordId);
-                } else {
-                    console.log("No intersection record found for disassociation");
-                }
-            } catch (webApiError: unknown) {
-                console.error("WebAPI disassociation failed, trying 1:N approach:", webApiError);
-                // If N:N fails, try clearing lookup field for 1:N relationship
-                await this.removeLookupRelationship(targetRecordId);
+            if (result.entities.length > 0) {
+                const intersectionRecordId = result.entities[0][`${intersectionEntityName}id`] as string;
+                await this._context.webAPI.deleteRecord(intersectionEntityName, intersectionRecordId);
+                console.log("Successfully disassociated record");
+            } else {
+                console.log("No association found to remove");
             }
-        }
-    }
-
-    private async createLookupRelationship(targetRecordId: string): Promise<void> {
-        try {
-            // For 1:N relationships, update the lookup field on the target record
-            const lookupField = `_${this._relatedEntityName}_value`;
-            const updateData: Record<string, unknown> = {};
-            updateData[lookupField] = this._relatedEntityId;
-
-            await this._context.webAPI.updateRecord(
-                this._targetEntity,
-                targetRecordId,
-                updateData
-            );
-
-            console.log("Created relationship via lookup field (1:N)");
         } catch (error: unknown) {
-            console.error("Error creating lookup relationship:", error);
-        }
-    }
-
-    private async removeLookupRelationship(targetRecordId: string): Promise<void> {
-        try {
-            // For 1:N relationships, clear the lookup field on the target record
-            const lookupField = `_${this._relatedEntityName}_value`;
-            const updateData: Record<string, unknown> = {};
-            updateData[lookupField] = null;
-
-            await this._context.webAPI.updateRecord(
-                this._targetEntity,
-                targetRecordId,
-                updateData
-            );
-
-            console.log("Removed relationship via lookup field (1:N)");
-        } catch (error: unknown) {
-            console.error("Error removing lookup relationship:", error);
+            console.error("Error disassociating record:", error);
+            throw error;
         }
     }
 

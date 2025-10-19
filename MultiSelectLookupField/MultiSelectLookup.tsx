@@ -224,9 +224,12 @@ export const MultiSelectLookup: React.FC<IMultiSelectLookupProps> = ({
                 <button
                     className={styles.dropdownButton}
                     onClick={(e) => {
+                        console.log("Dropdown button clicked - current state:", isOpen);
                         e.preventDefault();
                         e.stopPropagation();
-                        setIsOpen(!isOpen);
+                        const newState = !isOpen;
+                        setIsOpen(newState);
+                        console.log("Dropdown new state:", newState);
                     }}
                     disabled={disabled}
                     aria-haspopup="listbox"
