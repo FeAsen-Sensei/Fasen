@@ -7,6 +7,9 @@ import {
     Input,
     Checkbox,
     Tag,
+    FluentProvider,
+    webLightTheme,
+    webDarkTheme,
 } from "@fluentui/react-components";
 import { Search20Regular, Dismiss20Regular } from "@fluentui/react-icons";
 
@@ -25,6 +28,7 @@ const useStyles = makeStyles({
         gap: "8px",
         width: "100%",
         fontFamily: tokens.fontFamilyBase,
+        paddingLeft: "2px",
     },
     selectedContainer: {
         display: "flex",
@@ -93,7 +97,7 @@ const useStyles = makeStyles({
     listItem: {
         display: "flex",
         alignItems: "center",
-        gap: "16px",
+        gap: "18px",
         padding: "12px 16px",
         cursor: "pointer",
         backgroundColor: tokens.colorNeutralBackground1,
@@ -109,6 +113,11 @@ const useStyles = makeStyles({
         ":last-child": {
             borderBottom: "none",
         },
+    },
+    checkboxWrapper: {
+        display: "flex",
+        alignItems: "center",
+        width: "100%",
     },
     buttonContainer: {
         display: "flex",
@@ -145,6 +154,35 @@ export const MultiSelectLookup: React.FC<IMultiSelectLookupProps> = ({
     const containerRef = React.useRef<HTMLDivElement>(null);
     const dropdownRef = React.useRef<HTMLDivElement>(null);
     const buttonRef = React.useRef<HTMLButtonElement>(null);
+
+    // Detect theme based on browser/system preference
+    const [isDarkMode, setIsDarkMode] = React.useState(() => {
+        if (typeof window !== 'undefined') {
+            return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        }
+        return false;
+    });
+
+    // Listen for theme changes
+    React.useEffect(() => {
+        if (typeof window !== 'undefined' && window.matchMedia) {
+            const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+            const handler = (e: MediaQueryListEvent) => setIsDarkMode(e.matches);
+            
+            // Modern browsers
+            if (mediaQuery.addEventListener) {
+                mediaQuery.addEventListener('change', handler);
+                return () => mediaQuery.removeEventListener('change', handler);
+            }
+            // Legacy browsers
+            else if (mediaQuery.addListener) {
+                mediaQuery.addListener(handler);
+                return () => mediaQuery.removeListener(handler);
+            }
+        }
+    }, []);
+
+    const currentTheme = isDarkMode ? webDarkTheme : webLightTheme;
 
     const filteredRecords = React.useMemo(() => {
         if (!searchText) return allRecords;
@@ -252,17 +290,18 @@ export const MultiSelectLookup: React.FC<IMultiSelectLookupProps> = ({
             </div>
 
             {isOpen && dropdownPosition && createPortal(
-                <div 
-                    ref={dropdownRef}
-                    className={styles.dropdownPanel}
-                    role="listbox"
-                    aria-label="Select items"
-                    style={{
-                        top: `${dropdownPosition.top}px`,
-                        left: `${dropdownPosition.left}px`,
-                        width: `${dropdownPosition.width}px`,
-                    }}
-                >
+                <FluentProvider theme={currentTheme}>
+                    <div 
+                        ref={dropdownRef}
+                        className={styles.dropdownPanel}
+                        role="listbox"
+                        aria-label="Select items"
+                        style={{
+                            top: `${dropdownPosition.top}px`,
+                            left: `${dropdownPosition.left}px`,
+                            width: `${dropdownPosition.width}px`,
+                        }}
+                    >
                     <div className={styles.buttonContainer}>
                         <button 
                             onClick={(e) => {
@@ -333,19 +372,22 @@ export const MultiSelectLookup: React.FC<IMultiSelectLookupProps> = ({
                                     aria-selected={selectedIds.has(record.id)}
                                     tabIndex={0}
                                 >
-                                    <Checkbox
-                                        checked={selectedIds.has(record.id)}
-                                        onChange={(e) => {
-                                            e.stopPropagation();
-                                            handleToggleRecord(record);
-                                        }}
-                                        label={record.name}
-                                    />
+                                    <div className={styles.checkboxWrapper}>
+                                        <Checkbox
+                                            checked={selectedIds.has(record.id)}
+                                            onChange={(e) => {
+                                                e.stopPropagation();
+                                                handleToggleRecord(record);
+                                            }}
+                                            label={record.name}
+                                        />
+                                    </div>
                                 </div>
                             ))
                         )}
                     </div>
-                </div>,
+                </div>
+                </FluentProvider>,
                 document.body
             )}
         </div>
