@@ -27,7 +27,7 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
         container: HTMLDivElement
     ): Promise<void> {
         // Version logging for deployment verification
-        console.log("🚀 Sensei Multi Select Lookup Field v1.2.14 - Duplicate Error Fix 🚀");
+        console.log("🚀 Sensei Multi Select Lookup Field v1.2.15 - Duplicate Call Prevention 🚀");
         
         this._context = context;
         this._notifyOutputChanged = notifyOutputChanged;
@@ -351,6 +351,15 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
             await webAPIWithExecute.execute(disassociateRequest);
             console.log("Successfully disassociated record");
         } catch (error: unknown) {
+            // Check if it's a "record not found" error (error code 2147746327 or -2147220969)
+            // This can happen if the record was already disassociated by a duplicate call
+            const errorObj = error as { errorCode?: number; code?: number; message?: string };
+            if (errorObj.errorCode === 2147746327 || errorObj.errorCode === -2147220969 || 
+                errorObj.code === 2147746327 || errorObj.code === -2147220969 ||
+                (errorObj.message && errorObj.message.toLowerCase().includes('not found'))) {
+                console.log("Record already disassociated (caught 404 error), continuing");
+                return; // Silently ignore "not found" errors
+            }
             console.error("Error disassociating record:", error);
             throw error;
         }
