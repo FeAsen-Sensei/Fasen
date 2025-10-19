@@ -208,33 +208,19 @@ export const MultiSelectLookup: React.FC<IMultiSelectLookupProps> = ({
                     </span>
                 ) : (
                     selectedRecords.map(record => (
-                        <div key={record.id} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                            <Tag
-                                appearance="outline"
-                            >
-                                {record.name}
-                            </Tag>
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleRemoveTag(record);
-                                }}
-                                style={{ 
-                                    background: 'none', 
-                                    border: 'none', 
-                                    cursor: 'pointer', 
-                                    padding: '4px', 
-                                    margin: 0,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    color: tokens.colorNeutralForeground2
-                                }}
-                                aria-label={`Remove ${record.name}`}
-                                type="button"
-                            >
-                                <Dismiss20Regular />
-                            </button>
-                        </div>
+                        <Tag
+                            key={record.id}
+                            dismissible
+                            dismissIcon={{ onClick: () => handleRemoveTag(record) }}
+                            appearance="filled"
+                            style={{
+                                backgroundColor: '#f5f5f5',
+                                color: tokens.colorNeutralForeground1,
+                                border: `1px solid ${tokens.colorNeutralStroke1}`,
+                            }}
+                        >
+                            {record.name}
+                        </Tag>
                     ))
                 )}
             </div>

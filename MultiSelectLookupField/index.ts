@@ -26,7 +26,7 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
         container: HTMLDivElement
     ): Promise<void> {
         // Version logging for deployment verification
-        console.log("🚀 PCF v1.2.5 - Relationship API + Theme Colors + Git Automation 🚀");
+        console.log("🚀 PCF v1.2.6 - Fixed Tag Styling (X inside, #f5f5f5 background) 🚀");
         
         this._context = context;
         this._notifyOutputChanged = notifyOutputChanged;
