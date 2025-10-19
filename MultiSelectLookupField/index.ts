@@ -18,6 +18,7 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
     private _relationshipName = "";
     private _relatedEntityId = "";
     private _relatedEntityName = "";
+    private _isProcessing = false;
 
     public async init(
         context: ComponentFramework.Context<IInputs>,
@@ -221,6 +222,10 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
 
         console.log("Selection change - Added:", added.length, "Removed:", removed.length);
 
+        // Set processing state
+        this._isProcessing = true;
+        this.renderControl();
+
         try {
             // Update relationships via WebAPI
             for (const record of added) {
@@ -240,6 +245,10 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
             this._notifyOutputChanged();
         } catch (error) {
             console.error("Error updating relationships:", error);
+        } finally {
+            // Clear processing state
+            this._isProcessing = false;
+            this.renderControl();
         }
     }
 
@@ -247,6 +256,29 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
         console.log("Associating record:", targetRecordId);
         
         try {
+            // Check if already associated to prevent duplicate associations
+            const intersectionEntity = this.getIntersectionEntityName(this._relationshipName);
+            const checkFetchXml = `
+                <fetch top="1">
+                    <entity name="${intersectionEntity}">
+                        <filter>
+                            <condition attribute="${this._relatedEntityName}id" operator="eq" value="${this._relatedEntityId}" />
+                            <condition attribute="${this._targetEntity}id" operator="eq" value="${targetRecordId}" />
+                        </filter>
+                    </entity>
+                </fetch>
+            `;
+            
+            const existing = await this._context.webAPI.retrieveMultipleRecords(
+                intersectionEntity,
+                `?fetchXml=${encodeURIComponent(checkFetchXml)}`
+            );
+            
+            if (existing.entities.length > 0) {
+                console.log("Record already associated, skipping");
+                return;
+            }
+            
             // Use the proper webAPI.execute with Associate request
             // This is the correct way to handle N:N relationships in PCF
             const associateRequest = {
@@ -322,6 +354,7 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
             selectedRecords: this._selectedRecords,
             onSelectionChange: this.handleSelectionChange.bind(this),
             disabled: this._context.mode.isControlDisabled,
+            isProcessing: this._isProcessing,
         };
 
         const element = React.createElement(MultiSelectLookup, props);

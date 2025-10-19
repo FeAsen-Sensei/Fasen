@@ -15,6 +15,7 @@ export interface IMultiSelectLookupProps {
     selectedRecords: ITeamRecord[];
     onSelectionChange: (selected: ITeamRecord[]) => void;
     disabled?: boolean;
+    isProcessing?: boolean;
 }
 
 const useStyles = makeStyles({
@@ -135,6 +136,7 @@ export const MultiSelectLookup: React.FC<IMultiSelectLookupProps> = ({
     selectedRecords,
     onSelectionChange,
     disabled = false,
+    isProcessing = false,
 }) => {
     const styles = useStyles();
     const [isOpen, setIsOpen] = React.useState(false);
@@ -269,17 +271,19 @@ export const MultiSelectLookup: React.FC<IMultiSelectLookupProps> = ({
                                 handleSelectAll();
                             }}
                             type="button"
+                            disabled={isProcessing}
                             style={{
                                 padding: "4px 8px",
                                 backgroundColor: tokens.colorNeutralBackground1,
                                 color: tokens.colorNeutralForeground1,
                                 border: `1px solid ${tokens.colorNeutralStroke1}`,
                                 borderRadius: tokens.borderRadiusMedium,
-                                cursor: "pointer",
+                                cursor: isProcessing ? "not-allowed" : "pointer",
                                 fontSize: tokens.fontSizeBase200,
+                                opacity: isProcessing ? 0.6 : 1,
                             }}
                         >
-                            Select All
+                            {isProcessing ? "Processing..." : "Select All"}
                         </button>
                         <button 
                             onClick={(e) => {
@@ -288,17 +292,19 @@ export const MultiSelectLookup: React.FC<IMultiSelectLookupProps> = ({
                                 onSelectionChange([]);
                             }}
                             type="button"
+                            disabled={isProcessing}
                             style={{
                                 padding: "4px 8px",
                                 backgroundColor: tokens.colorNeutralBackground1,
                                 color: tokens.colorNeutralForeground1,
                                 border: `1px solid ${tokens.colorNeutralStroke1}`,
                                 borderRadius: tokens.borderRadiusMedium,
-                                cursor: "pointer",
+                                cursor: isProcessing ? "not-allowed" : "pointer",
                                 fontSize: tokens.fontSizeBase200,
+                                opacity: isProcessing ? 0.6 : 1,
                             }}
                         >
-                            Clear All
+                            {isProcessing ? "Processing..." : "Clear All"}
                         </button>
                     </div>
 
