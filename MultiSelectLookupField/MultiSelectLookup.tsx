@@ -71,14 +71,13 @@ const useStyles = makeStyles({
         maxHeight: "320px",
         overflowY: "auto",
         backgroundColor: "#ffffff",
-        border: `2px solid ${tokens.colorNeutralStroke1}`,
+        border: `1px solid ${tokens.colorNeutralStroke1}`,
         borderRadius: tokens.borderRadiusMedium,
-        boxShadow: tokens.shadow28,
+        boxShadow: "0 4px 16px rgba(0, 0, 0, 0.15)",
         zIndex: 999999,
         marginTop: "2px",
         color: tokens.colorNeutralForeground1,
         fontFamily: tokens.fontFamilyBase,
-        // Ensure it appears above other elements
         isolation: "isolate",
     },
     searchContainer: {
