@@ -246,9 +246,7 @@ export const MultiSelectLookup: React.FC<IMultiSelectLookupProps> = ({
                     <span aria-hidden="true">{isOpen ? "▲" : "▼"}</span>
                 </button>
 
-            </div>
-
-            {isOpen && (
+                {isOpen && (
                 <div 
                     ref={dropdownRef}
                     className={styles.dropdownPanel}
@@ -320,7 +318,9 @@ export const MultiSelectLookup: React.FC<IMultiSelectLookupProps> = ({
                         )}
                     </div>
                 </div>
-            )}
+                )}
+
+            </div>
         </div>
     );
 };
