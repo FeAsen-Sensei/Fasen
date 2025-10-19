@@ -1,5 +1,4 @@
 import * as React from "react";
-import { createPortal } from "react-dom";
 import { ITeamRecord } from "./types";
 import {
     makeStyles,
@@ -15,6 +14,7 @@ export interface IMultiSelectLookupProps {
     selectedRecords: ITeamRecord[];
     onSelectionChange: (selected: ITeamRecord[]) => void;
     disabled?: boolean;
+    isProcessing?: boolean;
 }
 
 const useStyles = makeStyles({
@@ -66,6 +66,9 @@ const useStyles = makeStyles({
     },
     dropdownPanel: {
         position: "absolute",
+        top: "100%",
+        left: "0",
+        right: "0",
         maxHeight: "320px",
         overflowY: "auto",
         backgroundColor: tokens.colorNeutralBackground1,
@@ -128,10 +131,28 @@ const useStyles = makeStyles({
         fontStyle: "italic",
         padding: "4px 8px",
     },
+    actionButton: {
+        padding: "4px 8px",
+        backgroundColor: tokens.colorNeutralBackground1,
+        color: tokens.colorNeutralForeground1,
+        border: `1px solid ${tokens.colorNeutralStroke1}`,
+        borderRadius: tokens.borderRadiusMedium,
+        cursor: "pointer",
+        fontSize: tokens.fontSizeBase200,
+        fontFamily: tokens.fontFamilyBase,
+        ":hover:not(:disabled)": {
+            backgroundColor: tokens.colorNeutralBackground1Hover,
+        },
+        ":disabled": {
+            opacity: 0.6,
+            cursor: "not-allowed",
+        },
+    },
 });
 
 export const MultiSelectLookup: React.FC<IMultiSelectLookupProps> = ({
     allRecords,
+    isProcessing = false,
     selectedRecords,
     onSelectionChange,
     disabled = false,
@@ -139,10 +160,8 @@ export const MultiSelectLookup: React.FC<IMultiSelectLookupProps> = ({
     const styles = useStyles();
     const [isOpen, setIsOpen] = React.useState(false);
     const [searchText, setSearchText] = React.useState("");
-    const [dropdownPosition, setDropdownPosition] = React.useState<{ top: number; left: number; width: number } | null>(null);
     const containerRef = React.useRef<HTMLDivElement>(null);
     const dropdownRef = React.useRef<HTMLDivElement>(null);
-    const buttonRef = React.useRef<HTMLButtonElement>(null);
 
     const filteredRecords = React.useMemo(() => {
         if (!searchText) return allRecords;
@@ -180,25 +199,6 @@ export const MultiSelectLookup: React.FC<IMultiSelectLookupProps> = ({
         onSelectionChange(newSelection);
     }, [selectedRecords, onSelectionChange]);
 
-    // Calculate dropdown position when opening
-    const updateDropdownPosition = React.useCallback(() => {
-        if (buttonRef.current && isOpen) {
-            const rect = buttonRef.current.getBoundingClientRect();
-            console.log("Button rect:", rect);
-            setDropdownPosition({
-                top: rect.bottom + 2,
-                left: rect.left,
-                width: rect.width
-            });
-        } else {
-            setDropdownPosition(null);
-        }
-    }, [isOpen]);
-
-    React.useEffect(() => {
-        updateDropdownPosition();
-    }, [isOpen, updateDropdownPosition]);
-
     return (
         <div className={styles.container}>
             <div className={styles.selectedContainer}>
@@ -227,7 +227,6 @@ export const MultiSelectLookup: React.FC<IMultiSelectLookupProps> = ({
 
             <div className={styles.relativeContainer} ref={containerRef}>
                 <button
-                    ref={buttonRef}
                     className={styles.dropdownButton}
                     onClick={(e) => {
                         console.log("Dropdown button clicked - current state:", isOpen);
@@ -249,17 +248,12 @@ export const MultiSelectLookup: React.FC<IMultiSelectLookupProps> = ({
 
             </div>
 
-            {isOpen && dropdownPosition && createPortal(
+            {isOpen && (
                 <div 
                     ref={dropdownRef}
                     className={styles.dropdownPanel}
                     role="listbox"
                     aria-label="Select items"
-                    style={{
-                        top: `${dropdownPosition.top}px`,
-                        left: `${dropdownPosition.left}px`,
-                        width: `${dropdownPosition.width}px`,
-                    }}
                 >
                     <div className={styles.buttonContainer}>
                         <button 
@@ -268,37 +262,23 @@ export const MultiSelectLookup: React.FC<IMultiSelectLookupProps> = ({
                                 e.stopPropagation();
                                 handleSelectAll();
                             }}
+                            disabled={isProcessing}
                             type="button"
-                            style={{
-                                padding: "4px 8px",
-                                backgroundColor: tokens.colorNeutralBackground1,
-                                color: tokens.colorNeutralForeground1,
-                                border: `1px solid ${tokens.colorNeutralStroke1}`,
-                                borderRadius: tokens.borderRadiusMedium,
-                                cursor: "pointer",
-                                fontSize: tokens.fontSizeBase200,
-                            }}
+                            className={styles.actionButton}
                         >
-                            Select All
+                            {isProcessing ? "Processing..." : "Select All"}
                         </button>
                         <button 
                             onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                onSelectionChange([]);
+                                handleClearAll();
                             }}
+                            disabled={isProcessing}
                             type="button"
-                            style={{
-                                padding: "4px 8px",
-                                backgroundColor: tokens.colorNeutralBackground1,
-                                color: tokens.colorNeutralForeground1,
-                                border: `1px solid ${tokens.colorNeutralStroke1}`,
-                                borderRadius: tokens.borderRadiusMedium,
-                                cursor: "pointer",
-                                fontSize: tokens.fontSizeBase200,
-                            }}
+                            className={styles.actionButton}
                         >
-                            Clear All
+                            {isProcessing ? "Processing..." : "Clear All"}
                         </button>
                     </div>
 
@@ -339,8 +319,7 @@ export const MultiSelectLookup: React.FC<IMultiSelectLookupProps> = ({
                             ))
                         )}
                     </div>
-                </div>,
-                document.body
+                </div>
             )}
         </div>
     );

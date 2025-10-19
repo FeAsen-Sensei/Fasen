@@ -18,6 +18,7 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
     private _relationshipName = "";
     private _relatedEntityId = "";
     private _relatedEntityName = "";
+    private _isProcessing = false;
 
     public async init(
         context: ComponentFramework.Context<IInputs>,
@@ -26,7 +27,7 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
         container: HTMLDivElement
     ): Promise<void> {
         // Version logging for deployment verification
-        console.log("🚀 PCF v1.2.7 - Fixed dropdown positioning (absolute) + Duplicate association prevention 🚀");
+        console.log("🚀 PCF v1.2.8 - Fixed dropdown relative positioning + Processing indicators + Background fix 🚀");
         
         this._context = context;
         this._notifyOutputChanged = notifyOutputChanged;
@@ -221,6 +222,10 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
 
         console.log("Selection change - Added:", added.length, "Removed:", removed.length);
 
+        // Set processing state and re-render
+        this._isProcessing = true;
+        this.renderControl();
+
         try {
             // Update relationships via WebAPI
             for (const record of added) {
@@ -240,6 +245,10 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
             this._notifyOutputChanged();
         } catch (error) {
             console.error("Error updating relationships:", error);
+        } finally {
+            // Clear processing state and re-render
+            this._isProcessing = false;
+            this.renderControl();
         }
     }
 
@@ -334,6 +343,7 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
             selectedRecords: this._selectedRecords,
             onSelectionChange: this.handleSelectionChange.bind(this),
             disabled: this._context.mode.isControlDisabled,
+            isProcessing: this._isProcessing,
         };
 
         const element = React.createElement(MultiSelectLookup, props);

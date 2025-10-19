@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <manifest>
-          <control namespace="SenseiMultiSelectLookupField" constructor="MultiSelectLookupField" version="1.2.7" display-name-key="MultiSelectLookupField" description-key="MultiSelectLookupField description" control-type="standard">
+          <control namespace="SenseiMultiSelectLookupField" constructor="MultiSelectLookupField" version="1.2.8" display-name-key="MultiSelectLookupField" description-key="MultiSelectLookupField description" control-type="standard">
     <external-service-usage enabled="false" />
     
     <!-- Target entity and relationship configuration -->
