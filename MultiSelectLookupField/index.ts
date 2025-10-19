@@ -27,7 +27,7 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
         container: HTMLDivElement
     ): Promise<void> {
         // Version logging for deployment verification
-        console.log("🚀 Sensei.MultiSelectLookupField v1.2.12 - Namespace: Sensei 🚀");
+        console.log("🚀 Sensei Multi Select Lookup Field v1.2.14 - Duplicate Error Fix 🚀");
         
         this._context = context;
         this._notifyOutputChanged = notifyOutputChanged;
@@ -308,6 +308,14 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
             await webAPIWithExecute.execute(associateRequest);
             console.log("Successfully associated record");
         } catch (error: unknown) {
+            // Check if it's a duplicate record error (error code 2147746359 or -2147185143)
+            const errorObj = error as { errorCode?: number; code?: number; message?: string };
+            if (errorObj.errorCode === 2147746359 || errorObj.errorCode === -2147185143 || 
+                errorObj.code === 2147746359 || errorObj.code === -2147185143 ||
+                (errorObj.message && errorObj.message.toLowerCase().includes('duplicate'))) {
+                console.log("Record already associated (caught duplicate error), continuing");
+                return; // Silently ignore duplicate errors
+            }
             console.error("Error associating record:", error);
             throw error;
         }
