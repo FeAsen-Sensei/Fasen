@@ -26,7 +26,7 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
         container: HTMLDivElement
     ): Promise<void> {
         // Version logging for deployment verification
-        console.log("🚀 PCF v1.2.0 - Fixed N:N association/disassociation logic 🚀");
+        console.log("🚀 PCF v1.2.5 - Relationship API + Theme Colors + Git Automation 🚀");
         
         this._context = context;
         this._notifyOutputChanged = notifyOutputChanged;
@@ -247,19 +247,33 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
         console.log("Associating record:", targetRecordId);
         
         try {
-            // Use the intersection entity name (lowercase) to create the association
-            const intersectionEntityName = this.getIntersectionEntityName(this._relationshipName);
+            // Use the proper webAPI.execute with Associate request
+            // This is the correct way to handle N:N relationships in PCF
+            const associateRequest = {
+                getMetadata: () => ({
+                    boundParameter: null,
+                    parameterTypes: {},
+                    operationType: 2,
+                    operationName: "Associate"
+                }),
+                relationship: this._relationshipName,
+                target: {
+                    entityType: this._relatedEntityName,
+                    id: this._relatedEntityId
+                },
+                relatedEntities: [{
+                    entityType: this._targetEntity,
+                    id: targetRecordId
+                }]
+            };
             
-            // Create a record in the intersection entity
-            const associationData: Record<string, string> = {};
-            associationData[`${this._relatedEntityName}id`] = this._relatedEntityId;
-            associationData[`${this._targetEntity}id`] = targetRecordId;
-
-            await this._context.webAPI.createRecord(
-                intersectionEntityName,
-                associationData
-            );
-
+            console.log("Executing Associate request:", associateRequest);
+            
+            // Execute method exists at runtime but not in type definitions
+            const webAPIWithExecute = this._context.webAPI as unknown as {
+                execute: (request: unknown) => Promise<unknown>;
+            };
+            await webAPIWithExecute.execute(associateRequest);
             console.log("Successfully associated record");
         } catch (error: unknown) {
             console.error("Error associating record:", error);
@@ -271,35 +285,31 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
         console.log("Disassociating record:", targetRecordId);
         
         try {
-            // Use Web API to disassociate N:N relationship
-            // The correct format is to use the intersection entity name (lowercase)
-            const intersectionEntityName = this.getIntersectionEntityName(this._relationshipName);
+            // Use the proper webAPI.execute with Disassociate request
+            // This is the correct way to handle N:N relationships in PCF
+            const disassociateRequest = {
+                getMetadata: () => ({
+                    boundParameter: null,
+                    parameterTypes: {},
+                    operationType: 2,
+                    operationName: "Disassociate"
+                }),
+                relationship: this._relationshipName,
+                target: {
+                    entityType: this._relatedEntityName,
+                    id: this._relatedEntityId
+                },
+                relatedEntityId: targetRecordId
+            };
             
-            // Query the intersection entity to find the association record
-            const fetchXml = `
-                <fetch>
-                    <entity name="${intersectionEntityName}">
-                        <attribute name="${intersectionEntityName}id" />
-                        <filter>
-                            <condition attribute="${this._relatedEntityName}id" operator="eq" value="${this._relatedEntityId}" />
-                            <condition attribute="${this._targetEntity}id" operator="eq" value="${targetRecordId}" />
-                        </filter>
-                    </entity>
-                </fetch>
-            `;
+            console.log("Executing Disassociate request:", disassociateRequest);
             
-            const result = await this._context.webAPI.retrieveMultipleRecords(
-                intersectionEntityName,
-                `?fetchXml=${encodeURIComponent(fetchXml)}`
-            );
-
-            if (result.entities.length > 0) {
-                const intersectionRecordId = result.entities[0][`${intersectionEntityName}id`] as string;
-                await this._context.webAPI.deleteRecord(intersectionEntityName, intersectionRecordId);
-                console.log("Successfully disassociated record");
-            } else {
-                console.log("No association found to remove");
-            }
+            // Execute method exists at runtime but not in type definitions
+            const webAPIWithExecute = this._context.webAPI as unknown as {
+                execute: (request: unknown) => Promise<unknown>;
+            };
+            await webAPIWithExecute.execute(disassociateRequest);
+            console.log("Successfully disassociated record");
         } catch (error: unknown) {
             console.error("Error disassociating record:", error);
             throw error;
