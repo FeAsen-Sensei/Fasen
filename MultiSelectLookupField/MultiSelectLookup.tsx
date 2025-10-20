@@ -68,8 +68,9 @@ const useStyles = makeStyles({
     },
     dropdownPanel: {
         position: "fixed",
-        maxHeight: "320px",
-        overflowY: "auto",
+        display: "flex",
+        flexDirection: "column",
+        maxHeight: "400px",
         backgroundColor: "#ffffff",
         border: `1px solid ${tokens.colorNeutralStroke1}`,
         borderRadius: tokens.borderRadiusMedium,
@@ -86,9 +87,9 @@ const useStyles = makeStyles({
         backgroundColor: "#ffffff",
     },
     listContainer: {
-        maxHeight: "200px",
         overflowY: "auto",
         backgroundColor: "#ffffff",
+        flex: 1,
     },
     listItem: {
         display: "flex",
@@ -157,7 +158,6 @@ export const MultiSelectLookup: React.FC<IMultiSelectLookupProps> = ({
     const [searchText, setSearchText] = React.useState("");
     const [dropdownPosition, setDropdownPosition] = React.useState<{ top: number; left: number; width: number } | null>(null);
     const buttonRef = React.useRef<HTMLButtonElement>(null);
-    const searchContainerRef = React.useRef<HTMLDivElement>(null);
 
     const filteredRecords = React.useMemo(() => {
         if (!searchText) return allRecords;
@@ -204,16 +204,24 @@ export const MultiSelectLookup: React.FC<IMultiSelectLookupProps> = ({
         }
     }, [isOpen]);
 
-    const getListContainerTop = React.useCallback(() => {
-        if (searchContainerRef.current) {
-            const rect = searchContainerRef.current.getBoundingClientRect();
-            return rect.bottom;
-        }
-        return 0;
-    }, []);
+
 
     React.useEffect(() => {
         updateDropdownPosition();
+        
+        if (isOpen) {
+            const handleScroll = () => {
+                updateDropdownPosition();
+            };
+            
+            window.addEventListener('scroll', handleScroll, true);
+            window.addEventListener('resize', handleScroll);
+            
+            return () => {
+                window.removeEventListener('scroll', handleScroll, true);
+                window.removeEventListener('resize', handleScroll);
+            };
+        }
     }, [isOpen, updateDropdownPosition]);
 
     return (
@@ -300,7 +308,7 @@ export const MultiSelectLookup: React.FC<IMultiSelectLookupProps> = ({
                         </button>
                     </div>
 
-                    <div ref={searchContainerRef} className={styles.searchContainer}>
+                    <div className={styles.searchContainer}>
                         <Input
                             placeholder="Search..."
                             value={searchText}
@@ -309,16 +317,7 @@ export const MultiSelectLookup: React.FC<IMultiSelectLookupProps> = ({
                         />
                     </div>
 
-                    <div 
-                        className={styles.listContainer}
-                        style={{
-                            position: "fixed",
-                            top: `${getListContainerTop()}px`,
-                            left: `${dropdownPosition.left}px`,
-                            width: `${dropdownPosition.width}px`,
-                            maxHeight: dropdownPosition ? `calc(100vh - ${getListContainerTop()}px - 20px)` : "200px"
-                        }}
-                    >
+                    <div className={styles.listContainer}>
                         {filteredRecords.length === 0 ? (
                             <div className={styles.listItem}>
                                 <span className={styles.emptyStateText}>
