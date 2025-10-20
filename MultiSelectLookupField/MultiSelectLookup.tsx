@@ -35,7 +35,7 @@ const useStyles = makeStyles({
         padding: "0.375rem",
         backgroundColor: tokens.colorNeutralBackground1,
         borderRadius: tokens.borderRadiusMedium,
-        border: `1px solid ${tokens.colorNeutralStroke1}`,
+        //border: `1px solid ${tokens.colorNeutralStroke1}`,
         ":focus-within": {
             boxShadow: `0 0 0 0.125rem ${tokens.colorBrandStroke1}`,
         },
@@ -114,16 +114,17 @@ const useStyles = makeStyles({
             cursor: "pointer",
             display: "flex !important",
             alignItems: "center !important",
-            gap: "0.625rem !important",
+            gap: tokens.spacingHorizontalS,
             margin: "0 !important",
             lineHeight: "1.25rem !important",
             verticalAlign: "middle !important",
+            fontSize: tokens.fontSizeBase300,
         },
         "& .fui-Checkbox": {
             display: "flex !important",
             alignItems: "center !important",
             width: "100%",
-            gap: "0.625rem !important",
+            gap: tokens.spacingHorizontalS,
             verticalAlign: "middle !important",
         },
         "& .fui-Checkbox__indicator": {
@@ -134,6 +135,7 @@ const useStyles = makeStyles({
             verticalAlign: "middle !important",
             marginTop: "0 !important",
             marginBottom: "0 !important",
+            alignSelf: "center !important",
         },
         "& .fui-Checkbox__input": {
             outline: "none !important",
@@ -151,6 +153,8 @@ const useStyles = makeStyles({
             verticalAlign: "middle !important",
             paddingTop: "0 !important",
             paddingBottom: "0 !important",
+            fontSize: tokens.fontSizeBase300,
+            alignSelf: "center !important",
         },
         "& > *": {
             width: "100%",
