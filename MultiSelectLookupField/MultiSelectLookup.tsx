@@ -103,17 +103,11 @@ const useStyles = makeStyles({
         },
         ":focus": {
             backgroundColor: tokens.colorNeutralBackground1Pressed,
-            outline: `2px solid ${tokens.colorBrandStroke1}`,
+            outline: "none",
         },
         ":last-child": {
             borderBottom: "none",
         },
-    },
-    checkboxWrapper: {
-        display: "flex",
-        alignItems: "center",
-        width: "100%",
-        gap: "10px",
     },
     buttonContainer: {
         display: "flex",
@@ -163,6 +157,7 @@ export const MultiSelectLookup: React.FC<IMultiSelectLookupProps> = ({
     const [searchText, setSearchText] = React.useState("");
     const [dropdownPosition, setDropdownPosition] = React.useState<{ top: number; left: number; width: number } | null>(null);
     const buttonRef = React.useRef<HTMLButtonElement>(null);
+    const searchContainerRef = React.useRef<HTMLDivElement>(null);
 
     const filteredRecords = React.useMemo(() => {
         if (!searchText) return allRecords;
@@ -208,6 +203,14 @@ export const MultiSelectLookup: React.FC<IMultiSelectLookupProps> = ({
             setDropdownPosition(null);
         }
     }, [isOpen]);
+
+    const getListContainerTop = React.useCallback(() => {
+        if (searchContainerRef.current) {
+            const rect = searchContainerRef.current.getBoundingClientRect();
+            return rect.bottom;
+        }
+        return 0;
+    }, []);
 
     React.useEffect(() => {
         updateDropdownPosition();
@@ -297,7 +300,7 @@ export const MultiSelectLookup: React.FC<IMultiSelectLookupProps> = ({
                         </button>
                     </div>
 
-                    <div className={styles.searchContainer}>
+                    <div ref={searchContainerRef} className={styles.searchContainer}>
                         <Input
                             placeholder="Search..."
                             value={searchText}
@@ -306,7 +309,16 @@ export const MultiSelectLookup: React.FC<IMultiSelectLookupProps> = ({
                         />
                     </div>
 
-                    <div className={styles.listContainer}>
+                    <div 
+                        className={styles.listContainer}
+                        style={{
+                            position: "fixed",
+                            top: `${getListContainerTop()}px`,
+                            left: `${dropdownPosition.left}px`,
+                            width: `${dropdownPosition.width}px`,
+                            maxHeight: dropdownPosition ? `calc(100vh - ${getListContainerTop()}px - 20px)` : "200px"
+                        }}
+                    >
                         {filteredRecords.length === 0 ? (
                             <div className={styles.listItem}>
                                 <span className={styles.emptyStateText}>
@@ -322,16 +334,19 @@ export const MultiSelectLookup: React.FC<IMultiSelectLookupProps> = ({
                                     aria-selected={selectedIds.has(record.id)}
                                     tabIndex={0}
                                 >
-                                    <div className={styles.checkboxWrapper}>
-                                        <Checkbox
-                                            checked={selectedIds.has(record.id)}
-                                            onChange={(e) => {
-                                                e.stopPropagation();
-                                                handleToggleRecord(record);
-                                            }}
-                                            label={record.name}
-                                        />
-                                    </div>
+                                    <Checkbox
+                                        checked={selectedIds.has(record.id)}
+                                        onChange={(e) => {
+                                            e.stopPropagation();
+                                            handleToggleRecord(record);
+                                        }}
+                                        label={record.name}
+                                        style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: "10px"
+                                        }}
+                                    />
                                 </div>
                             ))
                         )}
