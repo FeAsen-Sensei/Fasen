@@ -22,22 +22,22 @@ const useStyles = makeStyles({
     container: {
         display: "flex",
         flexDirection: "column",
-        gap: "8px",
+        gap: "0.5rem",
         width: "100%",
         fontFamily: tokens.fontFamilyBase,
-        paddingLeft: "2px",
+        paddingLeft: "0.125rem",
     },
     selectedContainer: {
         display: "flex",
         flexWrap: "wrap",
-        gap: "4px",
-        minHeight: "32px",
-        padding: "6px",
+        gap: "0.25rem",
+        minHeight: "2rem",
+        padding: "0.375rem",
         backgroundColor: tokens.colorNeutralBackground1,
         borderRadius: tokens.borderRadiusMedium,
         border: `1px solid ${tokens.colorNeutralStroke1}`,
         ":focus-within": {
-            boxShadow: `0 0 0 2px ${tokens.colorBrandStroke1}`,
+            boxShadow: `0 0 0 0.125rem ${tokens.colorBrandStroke1}`,
         },
     },
     dropdownButton: {
@@ -49,7 +49,7 @@ const useStyles = makeStyles({
         color: tokens.colorNeutralForeground1,
         border: `1px solid ${tokens.colorNeutralStroke1}`,
         borderRadius: tokens.borderRadiusMedium,
-        padding: "8px 12px",
+        padding: "0.5rem 0.75rem",
         fontFamily: tokens.fontFamilyBase,
         fontSize: tokens.fontSizeBase300,
         cursor: "pointer",
@@ -58,7 +58,7 @@ const useStyles = makeStyles({
             backgroundColor: tokens.colorNeutralBackground1Hover,
         },
         ":focus": {
-            boxShadow: `0 0 0 2px ${tokens.colorBrandStroke1}`,
+            boxShadow: `0 0 0 0.125rem ${tokens.colorBrandStroke1}`,
             outline: "none",
         },
         ":disabled": {
@@ -70,19 +70,19 @@ const useStyles = makeStyles({
         position: "fixed",
         display: "flex",
         flexDirection: "column",
-        maxHeight: "400px",
+        maxHeight: "25rem",
         backgroundColor: "#ffffff",
         border: `1px solid ${tokens.colorNeutralStroke1}`,
         borderRadius: tokens.borderRadiusMedium,
-        boxShadow: "0 4px 16px rgba(0, 0, 0, 0.15)",
+        boxShadow: "0 0.25rem 1rem rgba(0, 0, 0, 0.15)",
         zIndex: 999999,
-        marginTop: "2px",
+        marginTop: "0.125rem",
         color: tokens.colorNeutralForeground1,
         fontFamily: tokens.fontFamilyBase,
         isolation: "isolate",
     },
     searchContainer: {
-        padding: "8px",
+        padding: "0.5rem",
         borderBottom: `1px solid ${tokens.colorNeutralStroke2}`,
         backgroundColor: "#ffffff",
     },
@@ -94,7 +94,7 @@ const useStyles = makeStyles({
     listItem: {
         display: "flex",
         alignItems: "center",
-        padding: "12px 16px",
+        padding: "0.75rem 1rem",
         cursor: "pointer",
         backgroundColor: "#ffffff",
         color: tokens.colorNeutralForeground1,
@@ -114,18 +114,35 @@ const useStyles = makeStyles({
             cursor: "pointer",
             display: "flex !important",
             alignItems: "center !important",
-            gap: "10px !important",
+            gap: "0.625rem !important",
             margin: "0 !important",
+            lineHeight: "1.25rem !important",
         },
         "& .fui-Checkbox": {
-            display: "flex",
-            alignItems: "center",
+            display: "flex !important",
+            alignItems: "center !important",
             width: "100%",
+            gap: "0.625rem !important",
         },
         "& .fui-Checkbox__indicator": {
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
+            display: "flex !important",
+            alignItems: "center !important",
+            justifyContent: "center !important",
+            flexShrink: "0 !important",
+        },
+        "& .fui-Checkbox__input": {
+            outline: "none !important",
+        },
+        "& .fui-Checkbox__input:focus": {
+            outline: "none !important",
+        },
+        "& .fui-Checkbox__input:focus-visible": {
+            outline: "none !important",
+        },
+        "& .fui-Checkbox__label": {
+            display: "flex !important",
+            alignItems: "center !important",
+            lineHeight: "1.25rem !important",
         },
         "& > *": {
             width: "100%",
@@ -133,13 +150,13 @@ const useStyles = makeStyles({
     },
     buttonContainer: {
         display: "flex",
-        gap: "8px",
-        padding: "8px",
+        gap: "0.5rem",
+        padding: "0.5rem",
         borderBottom: `1px solid ${tokens.colorNeutralStroke2}`,
         backgroundColor: "#ffffff",
     },
     actionButton: {
-        padding: "4px 8px",
+        padding: "0.25rem 0.5rem",
         backgroundColor: "#ffffff",
         color: tokens.colorNeutralForeground1,
         border: `1px solid ${tokens.colorNeutralStroke1}`,
@@ -163,7 +180,7 @@ const useStyles = makeStyles({
         color: tokens.colorNeutralForeground3,
         fontSize: tokens.fontSizeBase200,
         fontStyle: "italic",
-        padding: "4px 8px",
+        padding: "0.25rem 0.5rem",
     },
 });
 
@@ -374,6 +391,11 @@ export const MultiSelectLookup: React.FC<IMultiSelectLookupProps> = ({
                                             e.stopPropagation();
                                         }}
                                         label={record.name}
+                                        style={{
+                                            gap: "0.625rem",
+                                            alignItems: "center",
+                                            display: "flex"
+                                        }}
                                     />
                                 </div>
                             ))
