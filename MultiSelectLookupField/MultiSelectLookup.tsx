@@ -224,6 +224,13 @@ export const MultiSelectLookup: React.FC<IMultiSelectLookupProps> = ({
         }
     }, [isOpen, updateDropdownPosition]);
 
+    // Update position when selected records change (tags added/removed)
+    React.useEffect(() => {
+        if (isOpen) {
+            updateDropdownPosition();
+        }
+    }, [selectedRecords.length, isOpen, updateDropdownPosition]);
+
     return (
         <div className={styles.container}>
             <div className={styles.selectedContainer}>
