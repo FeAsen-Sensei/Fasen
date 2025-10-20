@@ -35,7 +35,7 @@ const useStyles = makeStyles({
         padding: "0.375rem",
         backgroundColor: tokens.colorNeutralBackground1,
         borderRadius: tokens.borderRadiusMedium,
-        //border: `1px solid ${tokens.colorNeutralStroke1}`,
+        border: `1px solid ${tokens.colorNeutralStroke1}`,
         ":focus-within": {
             boxShadow: `0 0 0 0.125rem ${tokens.colorBrandStroke1}`,
         },
