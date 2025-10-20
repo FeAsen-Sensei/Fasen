@@ -109,6 +109,16 @@ const useStyles = makeStyles({
         ":last-child": {
             borderBottom: "none",
         },
+        "& label": {
+            width: "100%",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+        },
+        "& > *": {
+            width: "100%",
+        },
     },
     buttonContainer: {
         display: "flex",
@@ -339,19 +349,20 @@ export const MultiSelectLookup: React.FC<IMultiSelectLookupProps> = ({
                                     role="option"
                                     aria-selected={selectedIds.has(record.id)}
                                     tabIndex={0}
+                                    onClick={() => handleToggleRecord(record)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' || e.key === ' ') {
+                                            e.preventDefault();
+                                            handleToggleRecord(record);
+                                        }
+                                    }}
                                 >
                                     <Checkbox
                                         checked={selectedIds.has(record.id)}
                                         onChange={(e) => {
                                             e.stopPropagation();
-                                            handleToggleRecord(record);
                                         }}
                                         label={record.name}
-                                        style={{
-                                            display: "flex",
-                                            alignItems: "center",
-                                            gap: "10px"
-                                        }}
                                     />
                                 </div>
                             ))
