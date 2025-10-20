@@ -27,7 +27,7 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
         container: HTMLDivElement
     ): Promise<void> {
         // Version logging for deployment verification
-        console.log("🚀 Sensei Multi Select Lookup Field v1.2.23 - Full Row Click & Centered Alignment 🚀");
+        console.log("🚀 Sensei Multi Select Lookup Field v1.2.24 - Fixed Checkbox Alignment with !important 🚀");
         
         this._context = context;
         this._notifyOutputChanged = notifyOutputChanged;

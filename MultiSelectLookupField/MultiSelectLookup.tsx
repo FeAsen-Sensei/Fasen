@@ -112,9 +112,20 @@ const useStyles = makeStyles({
         "& label": {
             width: "100%",
             cursor: "pointer",
+            display: "flex !important",
+            alignItems: "center !important",
+            gap: "10px !important",
+            margin: "0 !important",
+        },
+        "& .fui-Checkbox": {
             display: "flex",
             alignItems: "center",
-            gap: "10px",
+            width: "100%",
+        },
+        "& .fui-Checkbox__indicator": {
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
         },
         "& > *": {
             width: "100%",
