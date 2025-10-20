@@ -117,18 +117,23 @@ const useStyles = makeStyles({
             gap: "0.625rem !important",
             margin: "0 !important",
             lineHeight: "1.25rem !important",
+            verticalAlign: "middle !important",
         },
         "& .fui-Checkbox": {
             display: "flex !important",
             alignItems: "center !important",
             width: "100%",
             gap: "0.625rem !important",
+            verticalAlign: "middle !important",
         },
         "& .fui-Checkbox__indicator": {
             display: "flex !important",
             alignItems: "center !important",
             justifyContent: "center !important",
             flexShrink: "0 !important",
+            verticalAlign: "middle !important",
+            marginTop: "0 !important",
+            marginBottom: "0 !important",
         },
         "& .fui-Checkbox__input": {
             outline: "none !important",
@@ -143,6 +148,9 @@ const useStyles = makeStyles({
             display: "flex !important",
             alignItems: "center !important",
             lineHeight: "1.25rem !important",
+            verticalAlign: "middle !important",
+            paddingTop: "0 !important",
+            paddingBottom: "0 !important",
         },
         "& > *": {
             width: "100%",
@@ -235,7 +243,7 @@ export const MultiSelectLookup: React.FC<IMultiSelectLookupProps> = ({
             setDropdownPosition({
                 top: rect.bottom + 2,
                 left: rect.left,
-                width: rect.width - 4
+                width: rect.width - 8
             });
         } else {
             setDropdownPosition(null);
@@ -387,14 +395,12 @@ export const MultiSelectLookup: React.FC<IMultiSelectLookupProps> = ({
                                 >
                                     <Checkbox
                                         checked={selectedIds.has(record.id)}
-                                        onChange={(e) => {
-                                            e.stopPropagation();
-                                        }}
                                         label={record.name}
                                         style={{
                                             gap: "0.625rem",
                                             alignItems: "center",
-                                            display: "flex"
+                                            display: "flex",
+                                            pointerEvents: "none"
                                         }}
                                     />
                                 </div>

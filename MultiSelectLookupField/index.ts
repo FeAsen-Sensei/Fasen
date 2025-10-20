@@ -27,7 +27,7 @@ export class MultiSelectLookupField implements ComponentFramework.StandardContro
         container: HTMLDivElement
     ): Promise<void> {
         // Version logging for deployment verification
-        console.log("🚀 Sensei Multi Select Lookup Field v1.2.27 - Removed Checkbox Outline 🚀");
+        console.log("🚀 Sensei Multi Select Lookup Field v1.2.28 - Fixed Double Click & Width 🚀");
         
         this._context = context;
         this._notifyOutputChanged = notifyOutputChanged;
