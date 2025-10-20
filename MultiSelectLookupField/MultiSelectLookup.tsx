@@ -93,14 +93,13 @@ const useStyles = makeStyles({
     listItem: {
         display: "flex",
         alignItems: "center",
-        gap: "18px",
         padding: "12px 16px",
         cursor: "pointer",
         backgroundColor: "#ffffff",
         color: tokens.colorNeutralForeground1,
         borderBottom: `1px solid ${tokens.colorNeutralStroke2}`,
         ":hover": {
-            backgroundColor: tokens.colorNeutralBackground1Hover,
+            backgroundColor: "#f5f5f5",
         },
         ":focus": {
             backgroundColor: tokens.colorNeutralBackground1Pressed,
@@ -114,6 +113,7 @@ const useStyles = makeStyles({
         display: "flex",
         alignItems: "center",
         width: "100%",
+        gap: "10px",
     },
     buttonContainer: {
         display: "flex",
@@ -202,7 +202,7 @@ export const MultiSelectLookup: React.FC<IMultiSelectLookupProps> = ({
             setDropdownPosition({
                 top: rect.bottom + 2,
                 left: rect.left,
-                width: rect.width - 2
+                width: rect.width - 4
             });
         } else {
             setDropdownPosition(null);
