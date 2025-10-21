@@ -1,0 +1,120 @@
+{
+  "format": 1,
+  "restore": {
+    "C:\\Users\\Felipe\\OneDrive - Sensei Productivity\\Clients\\Essential Energy\\PBI 20107\\SenseiMultiSelectLookupField\\Solution\\SenseiMultiSelectLookupFieldSolution.cdsproj": {}
+  },
+  "projects": {
+    "C:\\Users\\Felipe\\OneDrive - Sensei Productivity\\Clients\\Essential Energy\\PBI 20107\\SenseiMultiSelectLookupField\\SenseiMultiSelectLookupField.pcfproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\Felipe\\OneDrive - Sensei Productivity\\Clients\\Essential Energy\\PBI 20107\\SenseiMultiSelectLookupField\\SenseiMultiSelectLookupField.pcfproj",
+        "projectName": "SenseiMultiSelectLookupField",
+        "projectPath": "C:\\Users\\Felipe\\OneDrive - Sensei Productivity\\Clients\\Essential Energy\\PBI 20107\\SenseiMultiSelectLookupField\\SenseiMultiSelectLookupField.pcfproj",
+        "packagesPath": "C:\\Users\\Felipe\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Felipe\\OneDrive - Sensei Productivity\\Clients\\Essential Energy\\PBI 20107\\SenseiMultiSelectLookupField\\obj\\",
+        "projectStyle": "PackageReference",
+        "UsingMicrosoftNETSdk": false,
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
+        "configFilePaths": [
+          "C:\\Users\\Felipe\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net462"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net462": {
+            "targetAlias": "net462",
+            "projectReferences": {}
+          }
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        }
+      },
+      "frameworks": {
+        "net462": {
+          "targetAlias": "net462",
+          "dependencies": {
+            "Microsoft.NETFramework.ReferenceAssemblies": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[1.0.0, )"
+            },
+            "Microsoft.PowerApps.MSBuild.Pcf": {
+              "target": "Package",
+              "version": "[1.*, )"
+            }
+          }
+        }
+      }
+    },
+    "C:\\Users\\Felipe\\OneDrive - Sensei Productivity\\Clients\\Essential Energy\\PBI 20107\\SenseiMultiSelectLookupField\\Solution\\SenseiMultiSelectLookupFieldSolution.cdsproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\Felipe\\OneDrive - Sensei Productivity\\Clients\\Essential Energy\\PBI 20107\\SenseiMultiSelectLookupField\\Solution\\SenseiMultiSelectLookupFieldSolution.cdsproj",
+        "projectName": "SenseiMultiSelectLookupFieldSolution",
+        "projectPath": "C:\\Users\\Felipe\\OneDrive - Sensei Productivity\\Clients\\Essential Energy\\PBI 20107\\SenseiMultiSelectLookupField\\Solution\\SenseiMultiSelectLookupFieldSolution.cdsproj",
+        "packagesPath": "C:\\Users\\Felipe\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Felipe\\OneDrive - Sensei Productivity\\Clients\\Essential Energy\\PBI 20107\\SenseiMultiSelectLookupField\\Solution\\obj\\",
+        "projectStyle": "PackageReference",
+        "UsingMicrosoftNETSdk": false,
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
+        "configFilePaths": [
+          "C:\\Users\\Felipe\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net462"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net462": {
+            "targetAlias": "net462",
+            "projectReferences": {
+              "C:\\Users\\Felipe\\OneDrive - Sensei Productivity\\Clients\\Essential Energy\\PBI 20107\\SenseiMultiSelectLookupField\\SenseiMultiSelectLookupField.pcfproj": {
+                "projectPath": "C:\\Users\\Felipe\\OneDrive - Sensei Productivity\\Clients\\Essential Energy\\PBI 20107\\SenseiMultiSelectLookupField\\SenseiMultiSelectLookupField.pcfproj"
+              }
+            }
+          }
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        }
+      },
+      "frameworks": {
+        "net462": {
+          "targetAlias": "net462",
+          "dependencies": {
+            "Microsoft.NETFramework.ReferenceAssemblies": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[1.0.0, )"
+            },
+            "Microsoft.PowerApps.MSBuild.Solution": {
+              "target": "Package",
+              "version": "[1.*, )"
+            }
+          }
+        }
+      }
+    }
+  }
+}

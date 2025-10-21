@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "dgSpecHash": "h9A1FQp9Erg=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\Felipe\\OneDrive - Sensei Productivity\\Clients\\Essential Energy\\PBI 20107\\SenseiMultiSelectLookupField\\Solution\\SenseiMultiSelectLookupFieldSolution.cdsproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Felipe\\.nuget\\packages\\microsoft.netframework.referenceassemblies\\1.0.0\\microsoft.netframework.referenceassemblies.1.0.0.nupkg.sha512",
+    "C:\\Users\\Felipe\\.nuget\\packages\\microsoft.netframework.referenceassemblies.net462\\1.0.0\\microsoft.netframework.referenceassemblies.net462.1.0.0.nupkg.sha512",
+    "C:\\Users\\Felipe\\.nuget\\packages\\microsoft.powerapps.msbuild.pcf\\1.49.4\\microsoft.powerapps.msbuild.pcf.1.49.4.nupkg.sha512",
+    "C:\\Users\\Felipe\\.nuget\\packages\\microsoft.powerapps.msbuild.solution\\1.49.4\\microsoft.powerapps.msbuild.solution.1.49.4.nupkg.sha512"
+  ],
+  "logs": []
+}

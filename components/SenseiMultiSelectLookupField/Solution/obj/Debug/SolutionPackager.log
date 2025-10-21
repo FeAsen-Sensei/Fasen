@@ -1,0 +1,20 @@
+2025-10-21 17:06:54.649 - Info	
+Packing C:\Users\Felipe\OneDrive - Sensei Productivity\Clients\Essential Energy\PBI 20107\SenseiMultiSelectLookupField\Solution\obj\Debug\Metadata to bin\Debug\SenseiMultiSelectLookupFieldSolution.zip
+
+2025-10-21 17:06:54.655 - Info	Processing Component: Entities
+2025-10-21 17:06:54.656 - Info	Processing Component: Roles
+2025-10-21 17:06:54.657 - Info	Processing Component: Workflows
+2025-10-21 17:06:54.657 - Info	Processing Component: FieldSecurityProfiles
+2025-10-21 17:06:54.657 - Info	Processing Component: Templates
+2025-10-21 17:06:54.658 - Info	Processing Component: EntityMaps
+2025-10-21 17:06:54.658 - Info	Processing Component: EntityRelationships
+2025-10-21 17:06:54.659 - Info	Processing Component: OrganizationSettings
+2025-10-21 17:06:54.659 - Info	Processing Component: optionsets
+2025-10-21 17:06:54.659 - Info	Processing Component: CustomControls
+2025-10-21 17:06:54.665 - Info	 - Sensei.MultiSelectLookupField
+2025-10-21 17:06:54.669 - Info	Processing Component: SolutionPluginAssemblies
+2025-10-21 17:06:54.669 - Info	Processing Component: EntityDataProviders
+2025-10-21 17:06:54.672 - Info	Processing Sharded Component Files
+2025-10-21 17:06:54.719 - Info	
+Unmanaged Pack complete.
+

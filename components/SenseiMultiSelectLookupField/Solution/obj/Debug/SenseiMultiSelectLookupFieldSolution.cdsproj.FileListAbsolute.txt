@@ -1,0 +1,2 @@
+C:\Users\Felipe\OneDrive - Sensei Productivity\Clients\Essential Energy\PBI 20107\SenseiMultiSelectLookupField\Solution\obj\Debug\SenseiMultiSelectLookupFieldSolution.cdsproj.AssemblyReference.cache
+C:\Users\Felipe\OneDrive - Sensei Productivity\Clients\Essential Energy\PBI 20107\SenseiMultiSelectLookupField\Solution\obj\Debug\SenseiMultiSelectLookupFieldSolution.cdsproj.CoreCompileInputs.cache
